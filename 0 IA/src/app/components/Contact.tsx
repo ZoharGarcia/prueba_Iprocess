@@ -218,7 +218,7 @@ export function Contact() {
                     onChange={handleChange}
                     required
                     rows={5}
-                    placeholder="Cuéntanos sobre tu proyecto o necesidades de automatización..."
+                    placeholder="Cuéntanos sobre tu proyecto o necesidades de automatización."
                     className="w-full resize-none border-2 focus:border-primary transition-colors"
                   />
                 </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { Button } from "@/app/components/ui/button";
+import logo from "@/assets/img/LOGO-IPROCESS-NARANJA-300x53.png";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -57,24 +58,20 @@ export function Header() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <button
-            onClick={() => scrollToSection("inicio")}
-            className="flex items-center space-x-3 group z-10"
-          >
-            <div className="relative">
-              <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-lg">
-                <span className="text-2xl font-bold text-primary-foreground">iP</span>
-              </div>
-              <div className="absolute inset-0 bg-primary rounded-lg blur opacity-0 group-hover:opacity-50 transition-opacity duration-300" />
-            </div>
-            <div className="hidden sm:block">
-              <div className="text-xl font-bold text-foreground tracking-tight">
-                iProcess <span className="text-primary">Ind</span>
-              </div>
-              <div className="text-xs text-muted-foreground -mt-0.5 tracking-wide">
-                Industrial Solutions
-              </div>
-            </div>
-          </button>
+  onClick={() => scrollToSection("inicio")}
+  className="flex items-center group z-10"
+>
+  <img
+    src={logo}
+    alt="iP"
+    className="
+      h-8 w-auto
+      transition-transform duration-300
+      group-hover:scale-110
+      drop-shadow-md
+    "
+  />
+</button>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-1">
