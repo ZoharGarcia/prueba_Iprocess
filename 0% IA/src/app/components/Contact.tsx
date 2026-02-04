@@ -38,17 +38,17 @@ export function Contact() {
     {
       icon: Phone,
       title: "Teléfono",
-      content: ["+505 2222-3333", "+505 8888-9999 (Emergencias 24/7)"],
+      content: ["+505 +505 2298 3170", "+505 8403 8777"],
     },
     {
       icon: Mail,
       title: "Email",
-      content: ["info@iprocess-ind.com", "soporte@iprocess-ind.com"],
+      content: ["info@iprocess-ind.com", "soporte.tecnico@iprocess-ind.com"],
     },
     {
       icon: Clock,
       title: "Horario",
-      content: ["Lunes - Viernes: 8:00 AM - 6:00 PM", "Sábados: 8:00 AM - 12:00 PM"],
+      content: ["Lunes - Viernes: 7:00am - 5:00pm", "Sábados: 8:00 AM - 11:00 PM"],
     },
   ];
 
