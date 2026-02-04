@@ -1,4 +1,5 @@
-import { Facebook, Linkedin, Twitter, Instagram, Mail, Phone, MapPin, ArrowUp } from "lucide-react";
+import { Facebook, Linkedin, Twitter, Instagram, Mail, Phone, MapPin, ArrowUp, Youtube } from "lucide-react";
+import logo from "@/assets/img/LOGO-IPROCESS-NARANJA-300x53.png";
 
 export function Footer() {
   const scrollToSection = (sectionId: string) => {
@@ -25,17 +26,26 @@ export function Footer() {
           {/* Company Info */}
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center shadow-lg">
-                <span className="text-2xl font-bold text-primary-foreground">iP</span>
+              <div className="flex items-center justify-between h-20">
+              
+                   {/* Logo */}
+          <button
+  className="flex items-center group z-10"
+>
+  <img
+    src={logo}
+    alt="iP"
+    className="
+      h-8 w-auto
+
+
+      drop-shadow-md
+    "
+  />
+</button>
               </div>
-              <div>
-                <div className="text-lg font-bold text-secondary-foreground">
-                  iProcess <span className="text-primary">Ind</span>
-                </div>
-                <div className="text-xs text-muted-foreground -mt-0.5">
-                  Industrial Solutions
-                </div>
-              </div>
+             
+              
             </div>
             <p className="text-secondary-foreground/80 dark:text-muted-foreground text-sm leading-relaxed mb-6">
               Líderes en automatización industrial con más de 15 años transformando 
@@ -45,10 +55,11 @@ export function Footer() {
             {/* Social Media */}
             <div className="flex gap-3">
               {[
-                { icon: Facebook, href: "#", label: "Facebook" },
-                { icon: Linkedin, href: "#", label: "LinkedIn" },
-                { icon: Twitter, href: "#", label: "Twitter" },
-                { icon: Instagram, href: "#", label: "Instagram" },
+                { icon: Facebook, href: "https://www.facebook.com/iProcessind/", label: "Facebook" },
+                { icon: Linkedin, href: "https://www.linkedin.com/company/iprocessind/", label: "LinkedIn" },
+                { icon: Youtube, href: "https://www.youtube.com/channel/UCrZ1E1RY0NGMQBbqR4KJUnw", label: "Youtube" },
+                { icon: Instagram, href: "https://www.instagram.com/iprocessind/", label: "Instagram" },
+        
               ].map((social, index) => (
                 <a
                   key={index}
@@ -130,7 +141,7 @@ export function Footer() {
                     +505 2298 3170
                   </a>
                   <a
-                    href="tel:+50588889999"
+                    href="https://api.whatsapp.com/send/?phone=50584038777&text&type=phone_number&app_absent=0"
                     className="text-secondary-foreground/80 dark:text-muted-foreground hover:text-primary transition-colors block font-medium"
                   >
                     +505 8403 8777

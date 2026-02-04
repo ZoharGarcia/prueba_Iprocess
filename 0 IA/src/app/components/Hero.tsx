@@ -2,6 +2,7 @@ import { ArrowRight, Play, CheckCircle2 } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { motion } from "motion/react";
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
+import recurso1 from "@/assets/img/recurso1.png";
 
 export function Hero() {
   const scrollToSection = (sectionId: string) => {
@@ -22,7 +23,7 @@ export function Hero() {
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
         <ImageWithFallback
-          src="https://images.unsplash.com/photo-1761195696590-3490ea770aa1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmR1c3RyaWFsJTIwYXV0b21hdGlvbiUyMGZhY3RvcnklMjB0ZWNobm9sb2d5fGVufDF8fHx8MTc3MDEyNzk1OXww&ixlib=rb-4.1.0&q=80&w=1080"
+          src={recurso1}
           alt="Industrial Automation"
           className="w-full h-full object-cover"
         />
