@@ -7,6 +7,7 @@ import { Partner } from "@/app/components/Partner";
 import { Contact } from "@/app/components/Contact";
 import { Footer } from "@/app/components/Footer";
 
+
 export default function App() {
   return (
     <ThemeProvider>
