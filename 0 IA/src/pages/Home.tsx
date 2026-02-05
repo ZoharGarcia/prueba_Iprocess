@@ -9,9 +9,9 @@ import { Footer } from "@/app/components/Footer";
 
 export default function Home() {
   return (
-    
+    <>
+   <Header />
       <div className="min-h-screen bg-background text-foreground">
-        
         <main>
           <section id="inicio"><Hero /></section>
           <section id="servicios"><Services /></section>
@@ -21,6 +21,7 @@ export default function Home() {
         </main>
         <Footer />
       </div>
+    </>
     
   );
 }
