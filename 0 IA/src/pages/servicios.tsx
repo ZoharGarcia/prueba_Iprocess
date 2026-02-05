@@ -1,12 +1,11 @@
-import { Header } from "@/app/components/Header";
-import { Hero } from "@/app/components/Hero";
-import { Routes, Route } from "react-router-dom";
+import { Layout } from "@/app/components/Layout";
+import { Services } from "@/app/components/Services";
 
-export default function Home() {
+export default function Servicios() {
   return (
-    <>
- 
-      <Hero />
-    </>
+    <Layout>
+      <Services />
+     
+    </Layout>
   );
 }

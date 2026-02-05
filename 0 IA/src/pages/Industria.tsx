@@ -1,12 +1,10 @@
-import { Header } from "@/app/components/Header";
-import { Hero } from "@/app/components/Hero";
-import { Routes, Route } from "react-router-dom";
+import { Layout } from "@/app/components/Layout";
+import { Industry } from "@/app/components/Industry";
 
-export default function Home() {
+export default function Industria() {
   return (
-    <>
-      <Header />
-      <Hero />
-    </>
+    <Layout>
+      <Industry />
+    </Layout>
   );
 }

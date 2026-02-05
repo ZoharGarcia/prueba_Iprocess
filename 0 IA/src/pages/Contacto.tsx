@@ -1,12 +1,10 @@
-import { Header } from "@/app/components/Header";
-import { Hero } from "@/app/components/Hero";
-import { Routes, Route } from "react-router-dom";
+import { Layout } from "@/app/components/Layout";
+import { Contact } from "@/app/components/Contact";
 
-export default function Home() {
+export default function Contacto() {
   return (
-    <>
-      <Header />
-      <Hero />
-    </>
+    <Layout>
+      <Contact />
+    </Layout>
   );
 }

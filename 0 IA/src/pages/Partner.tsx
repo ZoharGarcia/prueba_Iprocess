@@ -1,12 +1,10 @@
-import { Header } from "@/app/components/Header";
-import { Hero } from "@/app/components/Hero";
-import { Routes, Route } from "react-router-dom";
+import { Layout } from "@/app/components/Layout";
+import { Partner1 } from "@/app/components/Partner1";
 
-export default function Home() {
+export default function Partner() {
   return (
-    <>
-      <Header />
-      <Hero />
-    </>
+    <Layout>
+      <Partner1 />
+    </Layout>
   );
 }
