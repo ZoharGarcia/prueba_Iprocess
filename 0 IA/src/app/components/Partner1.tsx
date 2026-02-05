@@ -1,7 +1,8 @@
 import { motion } from "motion/react";
-import { Target, Eye, Award, Users, CheckCircle2 } from "lucide-react";
+import { Target, Eye, Award, Users, CheckCircle2, HeartHandshake } from "lucide-react";
 import { Card } from "@/app/components/ui/card";
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
+import recursoPartner from "@/assets/img/recurso-partner.png";
 
 const values = [
   {
@@ -16,12 +17,20 @@ const values = [
     description:
       "Ser la elección principal de nuestros clientes en la región centroamericana al suministrar soluciones industriales con tecnologías innovadoras y calidad en la automatización, digitalización y optimización de procesos.",
   },
-  {
-    icon: Award,
-    title: "Calidad",
-    description:
-      "Compromiso con los más altos estándares de calidad en cada proyecto, utilizando equipos certificados y personal altamente capacitado.",
-  },
+{
+  icon: HeartHandshake,
+  title: "Valores",
+  description: (
+    <ul className="list-disc list-inside space-y-1 text-left text-muted-foreground">
+      <li>Respeto</li>
+      <li>Empatía</li>
+      <li>Compromiso</li>
+      <li>Honestidad</li>
+      <li>Integridad</li>
+    </ul>
+  ),
+},
+
   {
     icon: Users,
     title: "Equipo",
@@ -116,7 +125,7 @@ export function Partner1() {
           >
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border-4 border-primary/20">
               <ImageWithFallback
-                src="https://images.unsplash.com/photo-1606337321936-02d1b1a4d5ef?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWFtJTIwZW5naW5lZXJzJTIwaW5kdXN0cmlhbHxlbnwxfHx8fDE3NzAxMjc5NjB8MA&ixlib=rb-4.1.0&q=80&w=1080"
+                src={recursoPartner}
                 alt="Team Engineers"
                 className="w-full h-full object-cover"
               />
