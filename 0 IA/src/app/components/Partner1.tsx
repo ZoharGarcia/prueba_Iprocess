@@ -8,13 +8,13 @@ const values = [
     icon: Target,
     title: "Misión",
     description:
-      "Proporcionar soluciones de automatización industrial de clase mundial que mejoren la eficiencia, seguridad y rentabilidad de nuestros clientes.",
+      "Innovamos con soluciones inteligentes, optimizamos procesos con tecnología avanzada para el éxito de nuestros clientes.",
   },
   {
     icon: Eye,
     title: "Visión",
     description:
-      "Ser la empresa líder en Centroamérica en innovación y excelencia en automatización industrial, reconocida por nuestra calidad y compromiso.",
+      "Ser la elección principal de nuestros clientes en la región centroamericana al suministrar soluciones industriales con tecnologías innovadoras y calidad en la automatización, digitalización y optimización de procesos.",
   },
   {
     icon: Award,
