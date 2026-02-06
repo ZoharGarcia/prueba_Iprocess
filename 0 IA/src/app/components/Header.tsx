@@ -46,6 +46,7 @@ const navItems = [
     { path: "/industria", label: "Industria" },
     { path: "/partner", label: "Partner" },
     { path: "/contacto", label: "Contacto" },
+    { path: "/e-shop", label: "E-Shop" },
   ];
 
   return (
