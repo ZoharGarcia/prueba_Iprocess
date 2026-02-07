@@ -3,7 +3,7 @@ import { Hero } from "@/app/components/Hero";
 import { Helmet } from "react-helmet-async";
 import { WhatWeDo } from "@/app/components/WhatWeDo";
 import { WhoWeAre } from "@/app/components/WhoWeare";
-
+import { Verticales } from "@/app/components/Verticales";
 export default function Inicio() {
   return (
     <>
@@ -17,6 +17,7 @@ export default function Inicio() {
 
       <Layout>
         <Hero />
+        <Verticales />
         <WhoWeAre />
         <WhatWeDo />
       </Layout>
