@@ -69,12 +69,3 @@ php artisan serve
 ```
 ---
 
-### Estructura Frontend
-
-src/
-│
-├── app/components/   → Componentes reutilizables
-├── pages/            → Vistas principales
-├── styles/           → Configuración de tema y estilos
-└── services/         → Comunicación con API
----
