@@ -1,6 +1,5 @@
 import { Layout } from "@/app/components/Layout";
 import { Services } from "@/app/components/Services";
-import { HeroServicios } from "@/app/components/HeroServicios";
 import { Helmet } from "react-helmet-async";
 
 export default function Servicios() {
@@ -15,7 +14,6 @@ export default function Servicios() {
 </Helmet>
 
     <Layout>
-      <HeroServicios />
       <Services />
     </Layout>
     </>
