@@ -3,17 +3,35 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens;  // ← Esto es clave para crear tokens
+    use HasApiTokens, Notifiable;
 
+    /**
+     * Los atributos que pueden ser asignados en masa
+     * (coinciden con las columnas de la tabla users)
+     */
     protected $fillable = [
-        'name', 'email', 'password',
+        'name',
+        'email',
+        'password',
     ];
 
+    /**
+     * Los atributos que deben ocultarse al serializar
+     */
     protected $hidden = [
-        'password', 'remember_token',
+        'password',
+        'remember_token',
+    ];
+
+    /**
+     * Casts según el schema
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
     ];
 }

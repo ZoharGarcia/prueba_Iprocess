@@ -1,29 +1,40 @@
 <?php
 
-namespace App\Models;
+namespace App\Http\Controllers\Auth;
 
-// Importa el trait de Sanctum (importante: Laravel\Sanctum, no Passport)
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;  // ← Este es el correcto
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
-class User extends Authenticatable
+class LoginController extends Controller
 {
-    use HasApiTokens, Notifiable;  // ← Asegúrate de que esté aquí
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email'    => ['required', 'email'],
+            'password' => ['required', 'string'],
+        ]);
 
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+        if (!Auth::attempt($request->only('email', 'password'))) {
+            return response()->json([
+                'message' => 'Credenciales inválidas'
+            ], 401);
+        }
 
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+        $user = $request->user();
 
-    // Opcional: casts si usas Laravel 9+
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
+        // Elimina tokens previos si quieres (opcional)
+        $user->tokens()->delete();
+
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return response()->json([
+            'token' => $token,
+            'user'  => [
+                'id'    => $user->id,
+                'name'  => $user->name,
+                'email' => $user->email,
+            ],
+        ]);
+    }
 }
