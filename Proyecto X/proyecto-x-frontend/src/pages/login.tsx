@@ -49,7 +49,7 @@ export default function Login() {
         let msg = "Credenciales inválidas.";
         try {
           const data = await res.json();
-          // Ajusta esto según tu backend:
+          // Ajustar según backend:
           // - Sanctum / custom: { message: "..."}
           // - Validation: { errors: { email: ["..."] } }
           if (data?.message) msg = data.message;
