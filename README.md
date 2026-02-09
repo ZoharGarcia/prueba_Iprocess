@@ -24,43 +24,6 @@ Incluye pruebas de UI modernas y el proyecto principal **Proyecto X** con arquit
 
 ---
 
-## 📂 Estructura del Repositorio
-
-Iprocess_Proyects
-│
-├── 0 IA
-│ ├── src
-│ ├── public
-│ ├── package.json
-│ └── vite.config.ts
-│
-├── 10 IA
-│ ├── src
-│ ├── public
-│ ├── package.json
-│ └── vite.config.ts
-│
-├── Proyecto X
-│ ├── proyecto-x-backend
-│ │ ├── app
-│ │ ├── routes
-│ │ ├── database
-│ │ └── composer.json
-│ │
-│ └── proyecto-x-frontend
-│ ├── src
-│ │ ├── components
-│ │ ├── pages
-│ │ ├── services
-│ │ └── styles
-│ ├── public
-│ └── package.json
-│
-├── Imagenes
-└── README.md
-
----
-
 # 🧩 Proyecto X – Arquitectura
 
 Arquitectura desacoplada basada en:
@@ -85,9 +48,9 @@ Arquitectura desacoplada basada en:
 
 # 🚀 Instalación y Uso
 
----
 
 ## 🖥 Prototipos 
+
 
 ```bash
 cd "0 IA"
@@ -106,3 +69,13 @@ php artisan key:generate
 php artisan migrate
 php artisan serve
 
+---
+
+#Estructura Frontend
+
+src/
+│
+├── app/components/   → Componentes reutilizables
+├── pages/            → Vistas principales
+├── styles/           → Configuración de tema y estilos
+└── services/         → Comunicación con API
