@@ -17,11 +17,19 @@ export default function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // Opcional: si quieres agregar "recordarme"
+  const [remember, setRemember] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canSubmit = email.trim().length > 0 && password.length >= 6 && !loading;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const canSubmit =
+    email.trim().length > 0 &&
+    emailRegex.test(email.trim()) &&
+    password.length >= 6 &&
+    !loading;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,35 +38,36 @@ export default function Login() {
     if (!canSubmit) return;
 
     setLoading(true);
+
     try {
       if (!API_BASE_URL) {
         throw new Error("Falta VITE_API_BASE_URL en tu .env");
       }
 
-      const res = await fetch(`${API_BASE_URL}/api/login`, {
+      const res = await fetch(`${API_BASE_URL}/login`, {  // ← Corrección clave: /api/login
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+          remember, // ← opcional, si tu backend lo soporta
+        }),
       });
 
-      // Si Laravel devuelve errores tipo 422/401
       if (!res.ok) {
-        let msg = "Credenciales inválidas.";
+        let msg = "Credenciales inválidas o error en el servidor.";
         try {
           const data = await res.json();
-          // Ajustar según backend:
-          // - Sanctum / custom: { message: "..."}
-          // - Validation: { errors: { email: ["..."] } }
           if (data?.message) msg = data.message;
           if (data?.errors) {
-            const firstKey = Object.keys(data.errors)[0];
-            if (firstKey && data.errors[firstKey]?.[0]) msg = data.errors[firstKey][0];
+            const firstError = Object.values(data.errors)[0] as string[];
+            if (firstError?.[0]) msg = firstError[0];
           }
         } catch {
-          // ignore parse error
+          // Si no se puede parsear JSON
         }
         throw new Error(msg);
       }
@@ -66,17 +75,15 @@ export default function Login() {
       const data = (await res.json()) as LoginResponse;
 
       if (!data?.token) {
-        throw new Error("La respuesta del backend no trae token.");
+        throw new Error("Respuesta inválida del servidor: no se recibió token.");
       }
 
       saveToken(data.token);
       navigate("/dashboard", { replace: true });
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message ?? "Error desconocido.");
-      } else {
-        setError("Error desconocido.");
-      }
+      setError(
+        err instanceof Error ? err.message : "Ocurrió un error desconocido."
+      );
     } finally {
       setLoading(false);
     }
@@ -97,9 +104,10 @@ export default function Login() {
               className="auth-input"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value.trim())}
               placeholder="tu@correo.com"
               autoComplete="email"
+              required
             />
           </label>
 
@@ -112,18 +120,35 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               autoComplete="current-password"
+              required
             />
+          </label>
+
+          {/* Opcional: checkbox recordarme */}
+          <label className="auth-checkbox">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+            />
+            Recordarme
           </label>
 
           {error && <div className="auth-error">{error}</div>}
 
-          <button className="auth-button" type="submit" disabled={!canSubmit}>
+          <button
+            className="auth-button"
+            type="submit"
+            disabled={!canSubmit || loading}
+          >
             {loading ? "Ingresando..." : "Ingresar"}
           </button>
         </form>
 
         <div className="auth-footer">
-          <small>API: {API_BASE_URL ? API_BASE_URL : "No configurada"}</small>
+          <small>
+            API: {API_BASE_URL || "No configurada (revisa .env)"}
+          </small>
         </div>
       </div>
     </div>
