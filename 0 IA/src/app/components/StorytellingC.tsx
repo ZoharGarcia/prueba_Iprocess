@@ -24,7 +24,7 @@ const storytellingServices = [
 	},
 	{
 		icon: PenTool,
-		title: "Resena y Contexto",
+		title: "Reseña y Contexto",
 		description:
 			"Documentamos el reto inicial, la solucion aplicada y el valor aportado.",
 	},
