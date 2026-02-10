@@ -1,7 +1,8 @@
-import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/Login";
+import Home from "../pages/Home";
 import "../styles/App.css";
+import React from "react";
 
 function Dashboard() {
   return (
@@ -29,18 +30,20 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <Routes>
+      {/* 🏠 Home = página de inicio */}
+      <Route path="/" element={<Home />} />
+
+      {/* 🔓 Público */}
       <Route
-        path="/"
+        path="/login"
         element={
           isAuthenticated()
             ? <Navigate to="/dashboard" replace />
-            : <Navigate to="/login" replace />
+            : <Login />
         }
       />
 
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-
+      {/* 🔒 Protegidas */}
       <Route
         path="/dashboard"
         element={
@@ -50,6 +53,7 @@ export default function App() {
         }
       />
 
+      {/* 🧭 Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
