@@ -154,7 +154,7 @@ export function Footer() {
               </li>
               <li>
                 <a 
-                  href="https://iprocessind.com" 
+                  href="https://prueba-iprocess.vercel.app" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
