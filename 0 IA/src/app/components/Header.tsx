@@ -43,9 +43,9 @@ export function Header() {
   const navItems = [
     { path: "/", label: "Inicio" },
     { path: "/servicios", label: "Servicios" },
-    { path: "/Unidades", label: "Unidades de Servicio" },
     { path: "/industria", label: "Industria" },
     { path: "/partner", label: "Partner" },
+    { path: "/storytelling", label: "Storytelling" },
     { path: "/contacto", label: "Contacto" },
     { path: "/e-shop", label: "E-Shop" },
   ];
