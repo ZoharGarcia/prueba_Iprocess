@@ -5,7 +5,7 @@ import ReactGA from 'react-ga';
 
 const Inicio = lazy(() => import("@/pages/Home"));
 const Servicios = lazy(() => import("@/pages/servicios"));
-const Storytelling = lazy(() => import("@/pages/Storytelling"));
+const Storytelling = lazy(() => import("@/pages/StorytellingP"));
 const Industria = lazy(() => import("@/pages/Industria"));
 const Partner = lazy(() => import("@/pages/Partner"));
 const Contacto = lazy(() => import("@/pages/Contacto"));
