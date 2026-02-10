@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import Login from "../pages/Login";
-import Register from "../pages/Register";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 import Home from "../pages/Home";
 import "../styles/App.css";
 import React from "react";
@@ -43,7 +43,14 @@ export default function App() {
             : <Login />
         }
       />
-
+      <Route
+        path="/register"
+        element={
+          isAuthenticated()
+            ? <Navigate to="/login" replace />
+            : <Register />
+        }
+      />
       {/* 🔒 Protegidas */}
       <Route
         path="/dashboard"
