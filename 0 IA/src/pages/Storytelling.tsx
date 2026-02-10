@@ -16,7 +16,7 @@ export default function Storytelling() {
 
     <Layout>
       <HeroStorytelling />
-      <Industry />
+      <Storytelling />
     </Layout>
       </>
   );
