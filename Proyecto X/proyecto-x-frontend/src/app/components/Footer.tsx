@@ -207,7 +207,7 @@ export function Footer() {
               </p>
               <Button asChild variant="default" size="lg" className="w-full sm:w-auto">
                 <Link 
-                  to="/registro"
+                  to="/register"
                   onClick={trackCTA}
                 >
                   Comienza Ahora

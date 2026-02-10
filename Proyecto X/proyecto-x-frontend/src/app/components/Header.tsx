@@ -119,7 +119,7 @@ export function Header() {
             <ThemeToggle />
             <Button asChild> 
               <Link
-                to="/registro" // O a /precios o dashboard
+                to="/register" // O a /precios o dashboard
                 className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                 onClick={() => trackMenuClick("Comienza Ahora", true)}
               >

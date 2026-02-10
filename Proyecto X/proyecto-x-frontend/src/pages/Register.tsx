@@ -2,6 +2,10 @@ import { useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "../styles/Register.css";
 
+/* =======================
+   Tipos
+======================= */
+
 type FormState = {
   name: string;
   email: string;
@@ -9,17 +13,19 @@ type FormState = {
   passwordConfirm: string;
 };
 
-type ApiRegisterResponse =
-  | { token: string }
-  | { access_token: string }
-  | { data?: { token?: string } }
-  | Record<string, unknown>;
+type ApiRegisterResponse = {
+  token?: string;
+};
+
+/* =======================
+   Utilidades
+======================= */
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function getApiBaseUrl(): string {
-  const v = import.meta.env.VITE_API_BASE_URL;
-  return typeof v === "string" ? v.replace(/\/$/, "") : "";
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+  return typeof baseUrl === "string" ? baseUrl.replace(/\/$/, "") : "";
 }
 
 function extractToken(payload: unknown): string | null {
@@ -34,6 +40,9 @@ function extractToken(payload: unknown): string | null {
   return null;
 }
 
+/* =======================
+   Componente
+======================= */
 
 export default function Register() {
   const navigate = useNavigate();
@@ -45,7 +54,7 @@ export default function Register() {
     passwordConfirm: "",
   });
 
-  const [touched, setTouched] = useState({
+  const [touched, setTouched] = useState<Record<keyof FormState, boolean>>({
     name: false,
     email: false,
     password: false,
@@ -55,50 +64,69 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [uiError, setUiError] = useState<string | null>(null);
 
+  /* =======================
+     Validaciones
+  ======================= */
+
   const errors = useMemo(() => {
-    const next: Partial<Record<keyof FormState, string>> = {};
-    const name = form.name.trim();
-    const email = form.email.trim();
+    const e: Partial<Record<keyof FormState, string>> = {};
 
-    if (!name) next.name = "Ingresa tu nombre.";
-    else if (name.length < 2) next.name = "El nombre debe tener al menos 2 caracteres.";
+    if (!form.name.trim()) {
+      e.name = "Ingresa tu nombre.";
+    } else if (form.name.trim().length < 2) {
+      e.name = "El nombre debe tener al menos 2 caracteres.";
+    }
 
-    if (!email) next.email = "Ingresa tu correo.";
-    else if (!emailRegex.test(email)) next.email = "Ingresa un correo válido.";
+    if (!form.email.trim()) {
+      e.email = "Ingresa tu correo.";
+    } else if (!emailRegex.test(form.email)) {
+      e.email = "Correo inválido.";
+    }
 
-    if (!form.password) next.password = "Ingresa tu contraseña.";
-    else if (form.password.length < 6) next.password = "La contraseña debe tener al menos 6 caracteres.";
+    if (!form.password) {
+      e.password = "Ingresa tu contraseña.";
+    } else if (form.password.length < 6) {
+      e.password = "Mínimo 6 caracteres.";
+    }
 
-    if (!form.passwordConfirm) next.passwordConfirm = "Confirma tu contraseña.";
-    else if (form.passwordConfirm !== form.password)
-      next.passwordConfirm = "Las contraseñas no coinciden.";
+    if (!form.passwordConfirm) {
+      e.passwordConfirm = "Confirma tu contraseña.";
+    } else if (form.passwordConfirm !== form.password) {
+      e.passwordConfirm = "Las contraseñas no coinciden.";
+    }
 
-    return next;
-  }, [form.name, form.email, form.password, form.passwordConfirm]);
+    return e;
+  }, [form]);
 
   const canSubmit =
     !loading &&
-    !errors.name &&
-    !errors.email &&
-    !errors.password &&
-    !errors.passwordConfirm;
+    Object.keys(errors).length === 0;
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  async function onSubmit(e: React.FormEvent) {
+  /* =======================
+     Submit
+  ======================= */
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setTouched({ name: true, email: true, password: true, passwordConfirm: true });
-    setUiError(null);
+
+    setTouched({
+      name: true,
+      email: true,
+      password: true,
+      passwordConfirm: true,
+    });
 
     if (!canSubmit) return;
 
     setLoading(true);
-    try {
-      const base = getApiBaseUrl();
+    setUiError(null);
 
-      const res = await fetch(`${base}/api/register`, {
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -108,28 +136,22 @@ export default function Register() {
           name: form.name.trim(),
           email: form.email.trim(),
           password: form.password,
-          password_confirmation: form.passwordConfirm, // Laravel common convention
         }),
       });
 
-      let data: ApiRegisterResponse = {};
-      try {
-        data = (await res.json()) as ApiRegisterResponse;
-      } catch {
-        data = {};
-      }
+      const data: ApiRegisterResponse = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        // Mensajes user-friendly
-        if (res.status === 422) {
-          setUiError("Revisa los datos e inténtalo de nuevo.");
-          return;
+        if (res.status === 409) {
+          setUiError("El correo ya está registrado.");
+        } else if (res.status === 422) {
+          setUiError("Datos inválidos. Revisa el formulario.");
+        } else {
+          setUiError("No se pudo crear la cuenta.");
         }
-        setUiError("No se pudo crear la cuenta. Inténtalo más tarde.");
         return;
       }
 
-      // Si backend devuelve token, autologin; si no, manda a login
       const token = extractToken(data);
       if (token) {
         localStorage.setItem("auth_token", token);
@@ -138,97 +160,91 @@ export default function Register() {
         navigate("/login", { replace: true });
       }
     } catch {
-      setUiError("No se pudo crear la cuenta. Inténtalo más tarde.");
+      setUiError("Error de conexión con el servidor.");
     } finally {
       setLoading(false);
     }
   }
 
+  /* =======================
+     UI
+  ======================= */
+
   return (
     <div className="register">
       <form className="register__card" onSubmit={onSubmit} noValidate>
         <h1 className="register__title">Crear cuenta</h1>
-        <p className="register__subtitle">Completa tus datos para registrarte.</p>
+        <p className="register__subtitle">
+          Regístrate para acceder a Proyecto X
+        </p>
 
-        {uiError && (
-          <div className="register__alert" role="alert">
-            {uiError}
-          </div>
-        )}
+        {uiError && <div className="register__alert">{uiError}</div>}
 
+        {/* Nombre */}
         <div className="register__field">
-          <label className="register__label" htmlFor="name">
-            Nombre
-          </label>
+          <label htmlFor="name">Nombre</label>
           <input
             id="name"
-            className="register__input"
             type="text"
             value={form.name}
             onChange={(e) => setField("name", e.target.value)}
             onBlur={() => setTouched((t) => ({ ...t, name: true }))}
-            autoComplete="name"
-            placeholder="Tu nombre"
           />
-          {touched.name && errors.name && <div className="register__error">{errors.name}</div>}
+          {touched.name && errors.name && (
+            <span className="register__error">{errors.name}</span>
+          )}
         </div>
 
+        {/* Email */}
         <div className="register__field">
-          <label className="register__label" htmlFor="email">
-            Correo
-          </label>
+          <label htmlFor="email">Correo</label>
           <input
             id="email"
-            className="register__input"
             type="email"
             value={form.email}
             onChange={(e) => setField("email", e.target.value)}
             onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-            autoComplete="email"
-            placeholder="correo@empresa.com"
           />
-          {touched.email && errors.email && <div className="register__error">{errors.email}</div>}
+          {touched.email && errors.email && (
+            <span className="register__error">{errors.email}</span>
+          )}
         </div>
 
+        {/* Password */}
         <div className="register__field">
-          <label className="register__label" htmlFor="password">
-            Contraseña
-          </label>
+          <label htmlFor="password">Contraseña</label>
           <input
             id="password"
-            className="register__input"
             type="password"
             value={form.password}
             onChange={(e) => setField("password", e.target.value)}
             onBlur={() => setTouched((t) => ({ ...t, password: true }))}
-            autoComplete="new-password"
-            placeholder="••••••••"
           />
           {touched.password && errors.password && (
-            <div className="register__error">{errors.password}</div>
+            <span className="register__error">{errors.password}</span>
           )}
         </div>
 
+        {/* Confirm Password */}
         <div className="register__field">
-          <label className="register__label" htmlFor="passwordConfirm">
-            Confirmar contraseña
-          </label>
+          <label htmlFor="passwordConfirm">Confirmar contraseña</label>
           <input
             id="passwordConfirm"
-            className="register__input"
             type="password"
             value={form.passwordConfirm}
             onChange={(e) => setField("passwordConfirm", e.target.value)}
-            onBlur={() => setTouched((t) => ({ ...t, passwordConfirm: true }))}
-            autoComplete="new-password"
-            placeholder="••••••••"
+            onBlur={() =>
+              setTouched((t) => ({ ...t, passwordConfirm: true }))
+            }
           />
           {touched.passwordConfirm && errors.passwordConfirm && (
-            <div className="register__error">{errors.passwordConfirm}</div>
+            <span className="register__error">
+              {errors.passwordConfirm}
+            </span>
           )}
         </div>
 
-        <button className="register__submit" type="submit" disabled={!canSubmit}>
+        <button type="submit" disabled={!canSubmit}>
           {loading ? "Creando..." : "Crear cuenta"}
         </button>
 
