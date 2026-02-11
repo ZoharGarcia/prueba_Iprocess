@@ -1,20 +1,31 @@
+import ReactGA from "react-ga4";
 import { Link } from "react-router-dom";
 import { Button } from "@/app/components/ui/button";
 import logoProyectoX from "@/assets/img/LOGO-IPROCESS-NARANJA-300x53.png";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { Twitter, Linkedin, Mail } from "lucide-react";
 
-type FooterFormProps = {
-  currentYear: number;
-  onTrackLinkClick: (label: string) => void;
-  onTrackCTA: () => void;
-};
+import "@/styles/Footer.css";
 
-export default function FooterForm({
-  currentYear,
-  onTrackLinkClick,
-  onTrackCTA,
-}: FooterFormProps) {
+export default function FooterForm() {
+  const currentYear = new Date().getFullYear();
+
+  const trackLinkClick = (label: string) => {
+    ReactGA.event({
+      category: "Footer",
+      action: "Clic Enlace",
+      label,
+    });
+  };
+
+  const trackCTA = () => {
+    ReactGA.event({
+      category: "Footer",
+      action: "Clic CTA",
+      label: "Comienza Ahora",
+    });
+  };
+
   return (
     <footer className="site-footer bg-background border-t border-border mt-auto">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
@@ -24,7 +35,7 @@ export default function FooterForm({
             <Link
               to="/"
               className="site-footer__brand flex items-center gap-3"
-              onClick={() => onTrackLinkClick("Footer Logo")}
+              onClick={() => trackLinkClick("Footer Logo")}
             >
               <img
                 src={logoProyectoX}
@@ -47,7 +58,7 @@ export default function FooterForm({
                 href="https://twitter.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => onTrackLinkClick("Twitter")}
+                onClick={() => trackLinkClick("Twitter")}
                 className="site-footer__social-link text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Twitter"
               >
@@ -58,7 +69,7 @@ export default function FooterForm({
                 href="https://linkedin.com/company/iprocess-ind"
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => onTrackLinkClick("LinkedIn")}
+                onClick={() => trackLinkClick("LinkedIn")}
                 className="site-footer__social-link text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="LinkedIn"
               >
@@ -67,7 +78,7 @@ export default function FooterForm({
 
               <a
                 href="mailto:contacto@iprocessind.com"
-                onClick={() => onTrackLinkClick("Email")}
+                onClick={() => trackLinkClick("Email")}
                 className="site-footer__social-link text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Email"
               >
@@ -86,7 +97,7 @@ export default function FooterForm({
                 <Link
                   to="/caracteristicas"
                   className="site-footer__link text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => onTrackLinkClick("Características Footer")}
+                  onClick={() => trackLinkClick("Características Footer")}
                 >
                   Características
                 </Link>
@@ -95,7 +106,7 @@ export default function FooterForm({
                 <Link
                   to="/precios"
                   className="site-footer__link text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => onTrackLinkClick("Precios Footer")}
+                  onClick={() => trackLinkClick("Precios Footer")}
                 >
                   Precios y Planes
                 </Link>
@@ -104,7 +115,7 @@ export default function FooterForm({
                 <Link
                   to="/dashboard"
                   className="site-footer__link text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => onTrackLinkClick("Dashboard Footer")}
+                  onClick={() => trackLinkClick("Dashboard Footer")}
                 >
                   Dashboard Demo
                 </Link>
@@ -113,7 +124,7 @@ export default function FooterForm({
                 <Link
                   to="/documentacion"
                   className="site-footer__link text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => onTrackLinkClick("Documentación Footer")}
+                  onClick={() => trackLinkClick("Documentación Footer")}
                 >
                   Documentación
                 </Link>
@@ -131,7 +142,7 @@ export default function FooterForm({
                 <Link
                   to="/acerca"
                   className="site-footer__link text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => onTrackLinkClick("Acerca de Nosotros")}
+                  onClick={() => trackLinkClick("Acerca de Nosotros")}
                 >
                   Acerca de Nosotros
                 </Link>
@@ -140,7 +151,7 @@ export default function FooterForm({
                 <Link
                   to="/blog"
                   className="site-footer__link text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => onTrackLinkClick("Blog")}
+                  onClick={() => trackLinkClick("Blog")}
                 >
                   Blog
                 </Link>
@@ -149,7 +160,7 @@ export default function FooterForm({
                 <Link
                   to="/partner"
                   className="site-footer__link text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => onTrackLinkClick("Socios")}
+                  onClick={() => trackLinkClick("Socios")}
                 >
                   Socios y Partners
                 </Link>
@@ -160,7 +171,7 @@ export default function FooterForm({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="site-footer__link text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => onTrackLinkClick("iProcess Ind")}
+                  onClick={() => trackLinkClick("iProcess Ind")}
                 >
                   iProcess Ind
                 </a>
@@ -179,7 +190,7 @@ export default function FooterForm({
                   <Link
                     to="/contacto"
                     className="site-footer__link text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => onTrackLinkClick("Contacto Footer")}
+                    onClick={() => trackLinkClick("Contacto Footer")}
                   >
                     Contacto
                   </Link>
@@ -188,7 +199,7 @@ export default function FooterForm({
                   <Link
                     to="/faq"
                     className="site-footer__link text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => onTrackLinkClick("FAQ")}
+                    onClick={() => trackLinkClick("FAQ")}
                   >
                     Preguntas Frecuentes
                   </Link>
@@ -197,7 +208,7 @@ export default function FooterForm({
                   <a
                     href="/soporte"
                     className="site-footer__link text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => onTrackLinkClick("Soporte Técnico")}
+                    onClick={() => trackLinkClick("Soporte Técnico")}
                   >
                     Soporte Técnico
                   </a>
@@ -216,7 +227,7 @@ export default function FooterForm({
                 size="lg"
                 className="site-footer__cta w-full sm:w-auto"
               >
-                <Link to="/register" onClick={onTrackCTA}>
+                <Link to="/register" onClick={trackCTA}>
                   Comienza Ahora
                 </Link>
               </Button>
@@ -232,7 +243,7 @@ export default function FooterForm({
             <Link
               to="/privacidad"
               className="site-footer__link hover:text-foreground transition-colors"
-              onClick={() => onTrackLinkClick("Política de Privacidad")}
+              onClick={() => trackLinkClick("Política de Privacidad")}
             >
               Privacidad
             </Link>
@@ -240,7 +251,7 @@ export default function FooterForm({
             <Link
               to="/terminos"
               className="site-footer__link hover:text-foreground transition-colors"
-              onClick={() => onTrackLinkClick("Términos de Servicio")}
+              onClick={() => trackLinkClick("Términos de Servicio")}
             >
               Términos
             </Link>

@@ -1,35 +1,101 @@
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, Link } from "react-router-dom";
+import ReactGA from "react-ga4";
 import { Menu, X } from "lucide-react";
-import { Link } from "react-router-dom";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { Button } from "@/app/components/ui/button";
 import logoProyectoX from "@/assets/img/LOGO-IPROCESS-NARANJA-300x53.png";
-import type { NavItem } from "@/pages/Header";
+import "@/styles/Header.css";
 
-
-type HeaderFormProps = {
-  locationPathname: string;
-  isMenuOpen: boolean;
-  isScrolled: boolean;
-  activeSection: string;
-  navItems: NavItem[];
-
-  onToggleMenu: () => void;
-  onCloseMenu: () => void;
-  onScrollToSection: (sectionId: string) => void;
-  onTrackClick: (label: string, isCTA?: boolean) => void;
+type NavItem = {
+  path: string;
+  label: string;
+  section?: string;
 };
 
-export default function HeaderForm({
-  locationPathname,
-  isMenuOpen,
-  isScrolled,
-  activeSection,
-  navItems,
-  onToggleMenu,
-  onCloseMenu,
-  onScrollToSection,
-  onTrackClick,
-}: HeaderFormProps) {
+const SECTIONS = [
+  "inicio",
+  "caracteristicas",
+  "precios",
+  "documentacion",
+  "contacto",
+] as const;
+
+export default function HeaderForm() {
+  const location = useLocation();
+
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>("inicio");
+
+  const navItems = useMemo<NavItem[]>(
+    () => [
+      { path: "/", label: "Inicio", section: "inicio" },
+      {
+        path: "/caracteristicas",
+        label: "Características",
+        section: "caracteristicas",
+      },
+      { path: "/precios", label: "Precios", section: "precios" },
+      {
+        path: "/documentacion",
+        label: "Documentación",
+        section: "documentacion",
+      },
+      { path: "/dashboard", label: "Dashboard" },
+      { path: "/contacto", label: "Contacto", section: "contacto" },
+    ],
+    []
+  );
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+
+      if (location.pathname !== "/") return;
+
+      const current = SECTIONS.find((section) => {
+        const el = document.getElementById(section);
+        if (!el) return false;
+        const rect = el.getBoundingClientRect();
+        return rect.top <= 100 && rect.bottom >= 100;
+      });
+
+      if (current) setActiveSection(current);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [location.pathname]);
+
+  // Si cambias de ruta, cierra el menú móvil para evitar estados raros.
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (!element) return;
+
+    element.scrollIntoView({ behavior: "smooth", block: "start" });
+    setIsMenuOpen(false);
+  };
+
+  const trackClick = (label: string, isCTA = false) => {
+    ReactGA.event({
+      category: "Navegación",
+      action: isCTA ? "Clic CTA" : "Clic Menú",
+      label,
+    });
+  };
+
+  const toggleMenu = () => setIsMenuOpen((p) => !p);
+  const closeMenu = () => setIsMenuOpen(false);
+
+  const locationPathname = location.pathname;
+
   return (
     <header
       className={`site-header fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -44,7 +110,7 @@ export default function HeaderForm({
           <Link
             to="/"
             className="site-header__brand flex items-center group z-10"
-            onClick={() => onTrackClick("Logo", false)}
+            onClick={() => trackClick("Logo", false)}
           >
             <img
               src={logoProyectoX}
@@ -70,9 +136,9 @@ export default function HeaderForm({
                 onClick={(e) => {
                   if (item.section && locationPathname === "/") {
                     e.preventDefault();
-                    onScrollToSection(item.section);
+                    scrollToSection(item.section);
                   }
-                  onTrackClick(item.label, false);
+                  trackClick(item.label, false);
                 }}
               >
                 {item.label}
@@ -96,7 +162,7 @@ export default function HeaderForm({
               <Link
                 to="/register"
                 className="site-header__cta"
-                onClick={() => onTrackClick("Comienza Ahora", true)}
+                onClick={() => trackClick("Comienza Ahora", true)}
               >
                 Comienza Ahora
               </Link>
@@ -107,7 +173,7 @@ export default function HeaderForm({
           <div className="site-header__mobile flex lg:hidden items-center space-x-3 z-10">
             <ThemeToggle />
             <button
-              onClick={onToggleMenu}
+              onClick={toggleMenu}
               className="site-header__mobile-button p-2 rounded-lg hover:bg-muted transition-colors"
               aria-label="Toggle menu"
               aria-expanded={isMenuOpen}
@@ -138,10 +204,10 @@ export default function HeaderForm({
                 onClick={(e) => {
                   if (item.section && locationPathname === "/") {
                     e.preventDefault();
-                    onScrollToSection(item.section);
+                    scrollToSection(item.section);
                   }
-                  onTrackClick(item.label, false);
-                  onCloseMenu();
+                  trackClick(item.label, false);
+                  closeMenu();
                 }}
               >
                 {item.label}
@@ -154,8 +220,8 @@ export default function HeaderForm({
                   to="/register"
                   className="site-header__cta w-full"
                   onClick={() => {
-                    onTrackClick("Comienza Ahora", true);
-                    onCloseMenu();
+                    trackClick("Comienza Ahora", true);
+                    closeMenu();
                   }}
                 >
                   Comienza Ahora

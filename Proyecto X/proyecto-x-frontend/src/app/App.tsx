@@ -75,11 +75,14 @@ export default function App() {
     <Routes>
       {/* ✅ Públicas con Header/Footer */}
       <Route
-        path="/"
-        element={
-            <Home />
-        }
+         path="/"
+         element={
+        <Layout>
+        <Home />
+        </Layout>
+          }
       />
+
 
       <Route
         path="/main"
