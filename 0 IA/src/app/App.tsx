@@ -5,7 +5,7 @@ import ReactGA from 'react-ga';
 
 const Inicio = lazy(() => import("@/pages/Home"));
 const Servicios = lazy(() => import("@/pages/servicios"));
-const Unidades = lazy(() => import("@/pages/Unidades"));
+const Storytelling = lazy(() => import("@/pages/StorytellingP"));
 const Industria = lazy(() => import("@/pages/Industria"));
 const Partner = lazy(() => import("@/pages/Partner"));
 const Contacto = lazy(() => import("@/pages/Contacto"));
@@ -39,7 +39,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Inicio />} />
           <Route path="/servicios" element={<Servicios />} />
-          <Route path="/unidades" element={<Unidades />} />
+          <Route path="/storytelling" element={<Storytelling />} />
           <Route path="/industria" element={<Industria />} />
           <Route path="/partner" element={<Partner />} />
           <Route path="/contacto" element={<Contacto />} />

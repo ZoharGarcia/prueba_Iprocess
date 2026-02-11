@@ -4,6 +4,7 @@ import logoProyectoX from "@/assets/img/LOGO-IPROCESS-NARANJA-300x53.png"; // As
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import ReactGA from "react-ga4";
 import { Twitter, Linkedin, Mail } from "lucide-react"; // o los íconos que uses
+import "@/styles/Footer.css"; 
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -154,7 +155,7 @@ export function Footer() {
               </li>
               <li>
                 <a 
-                  href="https://iprocessind.com" 
+                  href="https://prueba-iprocess.vercel.app" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"

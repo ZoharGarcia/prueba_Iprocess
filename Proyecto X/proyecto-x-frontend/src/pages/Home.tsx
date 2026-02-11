@@ -1,4 +1,5 @@
 import { Layout } from "@/app/components/Layout";
+import "@/styles/Footer.css"; 
 
 export default function Home() {
   return (
