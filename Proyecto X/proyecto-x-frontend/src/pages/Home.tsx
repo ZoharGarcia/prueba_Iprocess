@@ -1,7 +1,4 @@
 import { Layout } from "@/app/components/Layout";
-import "@/styles/Header.css"; 
-import "@/styles/Index.css"; 
-import "@/styles/Footer.css"; 
 
 export default function Home() {
   return (
