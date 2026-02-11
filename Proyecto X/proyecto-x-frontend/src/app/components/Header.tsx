@@ -5,6 +5,7 @@ import { Button } from "@/app/components/ui/button";
 import logoProyectoX from "@/assets/img/LOGO-IPROCESS-NARANJA-300x53.png"; // Asegúrate de tener el logo en esta ruta 
 import { Link, useLocation } from "react-router-dom";
 import ReactGA from "react-ga4";  
+import "@/styles/Header.css";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
