@@ -46,7 +46,7 @@ function Dashboard() {
     localStorage.removeItem("auth_token");
     sessionStorage.removeItem("auth_token");
 
-    navigate("/login", { replace: true });
+    navigate("/", { replace: true });
   };
 
   return (
