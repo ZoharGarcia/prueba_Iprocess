@@ -7,7 +7,7 @@ function getApiBaseUrl(): string {
   return typeof baseUrl === "string" ? baseUrl.replace(/\/$/, "") : "";
 }
 
-export function VerifyCode() {
+export function VerifyResetCode() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
 
@@ -34,21 +34,21 @@ export function VerifyCode() {
     setUiError(null);
 
     try {
-      // ✅ Cambia el endpoint si tu backend usa otro para VERIFICAR código
-      const res = await fetch(`${getApiBaseUrl()}/api/verify-code`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/verify-reset-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), code: code.trim() }),
       });
 
       const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
         setUiError(data.message || "Código incorrecto");
         return;
       }
 
       navigate(
-        `/new-password?email=${encodeURIComponent(email.trim())}&code=${encodeURIComponent(
+        `/change-password?email=${encodeURIComponent(email.trim())}&code=${encodeURIComponent(
           code.trim()
         )}`,
         { replace: true }
@@ -69,7 +69,7 @@ export function VerifyCode() {
           </div>
           <div className="auth-brand__divider" />
           <h2 className="auth-brand__title">Proyecto X</h2>
-          <p className="auth-brand__subtitle">Ahora valida el código.</p>
+          <p className="auth-brand__subtitle">Paso 2: verifica el código.</p>
         </aside>
 
         <main className="auth-panel">
@@ -92,7 +92,7 @@ export function VerifyCode() {
                 className="auth-input"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                placeholder="######"
+                placeholder="123456"
                 inputMode="numeric"
               />
               {!!error && <div className="auth-field-error">{error}</div>}

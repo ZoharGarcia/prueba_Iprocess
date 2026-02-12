@@ -32,7 +32,6 @@ export function ForgotPassword() {
     setUiError(null);
 
     try {
-      // ✅ Cambia el endpoint si tu backend usa otro para ENVIAR el código
       const res = await fetch(`${getApiBaseUrl()}/api/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -40,12 +39,13 @@ export function ForgotPassword() {
       });
 
       const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
         setUiError(data.message || "No se pudo enviar el código");
         return;
       }
 
-      navigate(`/verify-code?email=${encodeURIComponent(email.trim())}`, {
+      navigate(`/verify-reset-code?email=${encodeURIComponent(email.trim())}`, {
         replace: true,
       });
     } catch {
@@ -64,16 +64,14 @@ export function ForgotPassword() {
           </div>
           <div className="auth-brand__divider" />
           <h2 className="auth-brand__title">Proyecto X</h2>
-          <p className="auth-brand__subtitle">
-            Ingresa tu correo y te enviamos un código.
-          </p>
+          <p className="auth-brand__subtitle">Paso 1: ingresa tu correo.</p>
         </aside>
 
         <main className="auth-panel">
           <form className="auth-form" onSubmit={onSubmit} noValidate>
             <div className="auth-header">
               <h1>Recuperar contraseña</h1>
-              <p>Primero confirmemos tu correo.</p>
+              <p>Te enviaremos un código a tu correo.</p>
             </div>
 
             {uiError && (
@@ -91,7 +89,7 @@ export function ForgotPassword() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
-                placeholder="user@gmail.com"
+                placeholder="usuario@gmail.com"
               />
               {!!error && <div className="auth-field-error">{error}</div>}
             </label>

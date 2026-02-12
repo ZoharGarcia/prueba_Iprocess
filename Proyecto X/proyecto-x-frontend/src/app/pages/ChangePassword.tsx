@@ -7,7 +7,7 @@ function getApiBaseUrl(): string {
   return typeof baseUrl === "string" ? baseUrl.replace(/\/$/, "") : "";
 }
 
-export function NewPassword() {
+export function ChangePassword() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
 
@@ -16,12 +16,13 @@ export function NewPassword() {
 
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [uiError, setUiError] = useState<string | null>(null);
 
   const error = useMemo(() => {
     if (!email.trim() || !code.trim())
-      return "Faltan datos de verificación. Vuelve a ingresar el código.";
+      return "Faltan datos. Vuelve a verificar el código.";
 
     if (!password) return "Ingresa una nueva contraseña";
     if (password.length < 6) return "Mínimo 6 caracteres";
@@ -42,7 +43,7 @@ export function NewPassword() {
     setUiError(null);
 
     try {
-      const res = await fetch(`${getApiBaseUrl()}/api/reset-password`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/change-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -54,13 +55,14 @@ export function NewPassword() {
       });
 
       const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
         const msg =
           data.message ||
           data.errors?.email?.[0] ||
           data.errors?.code?.[0] ||
           data.errors?.password?.[0] ||
-          "No se pudo restablecer la contraseña";
+          "No se pudo cambiar la contraseña";
         setUiError(msg);
         return;
       }
@@ -82,14 +84,14 @@ export function NewPassword() {
           </div>
           <div className="auth-brand__divider" />
           <h2 className="auth-brand__title">Proyecto X</h2>
-          <p className="auth-brand__subtitle">Define tu nueva contraseña.</p>
+          <p className="auth-brand__subtitle">Paso 3: nueva contraseña.</p>
         </aside>
 
         <main className="auth-panel">
           <form className="auth-form" onSubmit={onSubmit} noValidate>
             <div className="auth-header">
               <h1>Nueva contraseña</h1>
-              <p>Elige una contraseña segura.</p>
+              <p>Define tu nueva contraseña.</p>
             </div>
 
             {uiError && (
