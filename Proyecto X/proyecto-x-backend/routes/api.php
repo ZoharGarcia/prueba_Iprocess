@@ -137,11 +137,11 @@ Route::get('/enviar', function () {
 
 Route::post('/forgot-password', function (Request $request) {
 
-    $request->validate([
+    $validated = $request->validate([
         'email' => 'required|email'
     ]);
 
-    $user = User::where('email', $request->email)->first();
+    $user = User::where('email', $validated['email'])->first();
 
     if (!$user) {
         return response()->json([
@@ -151,37 +151,30 @@ Route::post('/forgot-password', function (Request $request) {
 
     $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-    $user->update([
+    $user->forceFill([
         'password_reset_code' => $code,
-        'password_reset_expires_at' => Carbon::now()->addMinutes(10),
-    ]);
+        'password_reset_expires_at' => now()->addMinutes(10),
+    ])->save();
 
     Mail::to($user->email)
         ->send(new ResetPasswordCodeMail($user->name, $code));
 
     return response()->json([
-        'message' => 'Si el correo existe, se enviará un código.'
+        'message' => 'Código enviado al correo.'
     ]);
 });
 
-Route::post('/reset-password', function (Request $request) {
+Route::post('/verify-reset-code', function (Request $request) {
 
-    $request->validate([
+    $validated = $request->validate([
         'email' => 'required|email',
         'code' => 'required|string|size:6',
-        'password' => 'required|string|min:6|confirmed',
     ]);
 
-    $user = User::where('email', $request->email)->first();
+    $user = User::where('email', $validated['email'])->first();
 
-    if (!$user) {
-        return response()->json([
-            'message' => 'Usuario no encontrado.'
-        ], 404);
-    }
-
-    if (
-        $user->password_reset_code !== $request->code ||
+    if (!$user ||
+        $user->password_reset_code !== $validated['code'] ||
         !$user->password_reset_expires_at ||
         now()->greaterThan($user->password_reset_expires_at)
     ) {
@@ -190,11 +183,39 @@ Route::post('/reset-password', function (Request $request) {
         ], 422);
     }
 
-    // Actualizar manualmente para evitar problemas de fillable
-    $user->password = Hash::make($request->password);
-    $user->password_reset_code = null;
-    $user->password_reset_expires_at = null;
-    $user->save();
+    return response()->json([
+        'message' => 'Código válido.',
+        'reset_token' => base64_encode($user->email . '|' . $user->password_reset_code)
+    ]);
+});
+
+Route::post('/change-password', function (Request $request) {
+
+    $validated = $request->validate([
+        'email' => 'required|email',
+        'code' => 'required|string|size:6',
+        'password' => 'required|string|min:6|confirmed',
+    ]);
+
+    $user = User::where('email', $validated['email'])->first();
+
+    if (!$user ||
+        $user->password_reset_code !== $validated['code'] ||
+        !$user->password_reset_expires_at ||
+        now()->greaterThan($user->password_reset_expires_at)
+    ) {
+        return response()->json([
+            'message' => 'Código inválido o expirado.'
+        ], 422);
+    }
+
+    $user->forceFill([
+        'password' => Hash::make($validated['password']),
+        'password_reset_code' => null,
+        'password_reset_expires_at' => null,
+    ])->save();
+
+    $user->tokens()->delete();
 
     return response()->json([
         'message' => 'Contraseña actualizada correctamente.'
