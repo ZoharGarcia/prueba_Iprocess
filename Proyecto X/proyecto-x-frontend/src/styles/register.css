@@ -26,10 +26,7 @@
   box-shadow: 0 18px 60px rgba(2, 6, 23, 0.10);
 }
 
-/* ============================= */
-/* Left Brand Panel */
-/* ============================= */
-
+/* Panel */
 .auth-brand{
   padding: 34px 30px;
   display: grid;
@@ -75,10 +72,6 @@
   text-align: center;
   line-height: 1.4;
 }
-
-/* ============================= */
-/* Right Form Panel */
-/* ============================= */
 
 .auth-panel{
   padding: 40px 46px;
@@ -131,10 +124,7 @@
   color: #dc2626;
 }
 
-/* ============================= */
 /* Button */
-/* ============================= */
-
 .auth-button{
   margin-top: 6px;
   padding: 14px;
@@ -163,10 +153,7 @@
   box-shadow: none;
 }
 
-/* ============================= */
 /* Error Box */
-/* ============================= */
-
 .auth-error{
   padding: 10px 12px;
   border-radius: 12px;
@@ -176,10 +163,7 @@
   font-size: 13px;
 }
 
-/* ============================= */
 /* Login link */
-/* ============================= */
-
 .auth-register{
   margin-top: 14px;
   text-align: center;
