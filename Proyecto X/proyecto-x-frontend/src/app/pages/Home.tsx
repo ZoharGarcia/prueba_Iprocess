@@ -1,7 +1,6 @@
 import { Hero } from "../components/Hero";
 import { Features } from "../components/Features";
 import { Pricing } from "../components/Pricing";
-import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { Button } from "../components/ui/button";
 
 export function Home() {
