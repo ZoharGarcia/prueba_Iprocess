@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\VerifyEmailMail;
 use Illuminate\Support\Facades\Hash;
 use App\Mail\ContactoMailable;
-
+use App\Mail\PruebaCorreo;
+use App\Mail\ResetPasswordCodeMail;
 use App\Http\Controllers\Auth\RegisterController;
 use Carbon\Carbon;
 
@@ -111,17 +112,91 @@ Route::post('/verify-code', function (Request $request) {
 
 Route::get('/test-mail', function () {
     try {
-        $datos = [
-            'nombre' => 'Bismarck',
-            'email' => 'acevedobismar5@gmail.com',
-            'mensaje' => 'Mensaje de prueba desde Laravel'
-        ];
+        Mail::raw('Correo de prueba', function ($message) {
+            $message->to('acevedobismar5@gmail.com')
+                    ->subject('Test');
+        });
 
-        Mail::to('bismaracevedo003@gmail.com')
-            ->send(new \App\Mail\ContactoMailable($datos));
-
-        return 'Correo enviado correctamente';
+        return 'Correo enviado';
     } catch (\Exception $e) {
         return $e->getMessage();
     }
+});
+Route::get('/enviar', function () {
+
+    Mail::to('destino@gmail.com')->send(
+        new PruebaCorreo(
+            'Bismar',
+            'Este correo fue enviado usando Gmail SMTP y Laravel.'
+        )
+    );
+
+    return 'Correo enviado correctamente';
+});
+
+
+Route::post('/forgot-password', function (Request $request) {
+
+    $request->validate([
+        'email' => 'required|email'
+    ]);
+
+    $user = User::where('email', $request->email)->first();
+
+    if (!$user) {
+        return response()->json([
+            'message' => 'Si el correo existe, se enviará un código.'
+        ]);
+    }
+
+    $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+    $user->update([
+        'password_reset_code' => $code,
+        'password_reset_expires_at' => Carbon::now()->addMinutes(10),
+    ]);
+
+    Mail::to($user->email)
+        ->send(new ResetPasswordCodeMail($user->name, $code));
+
+    return response()->json([
+        'message' => 'Si el correo existe, se enviará un código.'
+    ]);
+});
+
+Route::post('/reset-password', function (Request $request) {
+
+    $request->validate([
+        'email' => 'required|email',
+        'code' => 'required|string|size:6',
+        'password' => 'required|string|min:6|confirmed',
+    ]);
+
+    $user = User::where('email', $request->email)->first();
+
+    if (!$user) {
+        return response()->json([
+            'message' => 'Usuario no encontrado.'
+        ], 404);
+    }
+
+    if (
+        $user->password_reset_code !== $request->code ||
+        !$user->password_reset_expires_at ||
+        now()->greaterThan($user->password_reset_expires_at)
+    ) {
+        return response()->json([
+            'message' => 'Código inválido o expirado.'
+        ], 422);
+    }
+
+    // Actualizar manualmente para evitar problemas de fillable
+    $user->password = Hash::make($request->password);
+    $user->password_reset_code = null;
+    $user->password_reset_expires_at = null;
+    $user->save();
+
+    return response()->json([
+        'message' => 'Contraseña actualizada correctamente.'
+    ]);
 });
