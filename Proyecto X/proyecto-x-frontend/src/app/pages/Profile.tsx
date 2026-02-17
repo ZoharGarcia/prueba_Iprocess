@@ -177,7 +177,7 @@ export default function Profile() {
   // ============================
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/");
   };
 
   if (!user)
@@ -226,16 +226,6 @@ export default function Profile() {
                   value={formData.name}
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label>Teléfono</Label>
-                <Input
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
                   }
                 />
               </div>

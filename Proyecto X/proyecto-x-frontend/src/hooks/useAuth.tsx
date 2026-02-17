@@ -19,7 +19,7 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function getToken() {
+function getToken(): string | null {
   return (
     localStorage.getItem("auth_token") ||
     sessionStorage.getItem("auth_token")
@@ -32,14 +32,18 @@ function getApiBaseUrl(): string {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(getToken());
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
 
-  const isAuthenticated = !!user;
+  // Si hay token, empieza en loading true (validando sesión)
+  const [loading, setLoading] = useState<boolean>(!!token);
 
-  async function refreshUser() {
+  // Solo autenticado si token válido Y usuario cargado
+  const isAuthenticated = !!token && !!user;
+
+  async function refreshUser(): Promise<void> {
     const storedToken = getToken();
+
     if (!storedToken) {
       setLoading(false);
       return;
@@ -55,39 +59,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!res.ok) throw new Error("Invalid session");
 
-      const data = await res.json();
+      const data: User = await res.json();
 
       setUser(data);
       setToken(storedToken);
-    } catch {
+    } catch (error) {
+      console.error("Session invalid:", error);
       logout();
     } finally {
       setLoading(false);
     }
   }
 
-  function logout() {
+  function logout(): void {
     localStorage.removeItem("auth_token");
     sessionStorage.removeItem("auth_token");
     setUser(null);
     setToken(null);
+    setLoading(false);
   }
 
   useEffect(() => {
     refreshUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <AuthContext.Provider
-      value={{ user, token, isAuthenticated, loading, logout, refreshUser }}
+      value={{
+        user,
+        token,
+        isAuthenticated,
+        loading,
+        logout,
+        refreshUser,
+      }}
     >
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be inside AuthProvider");
+  if (!context) {
+    throw new Error("useAuth must be used inside AuthProvider");
+  }
   return context;
 }

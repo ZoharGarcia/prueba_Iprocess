@@ -1,4 +1,4 @@
-// src/pages/inicio.tsx  (o Home.tsx)
+// src/pages/inicio.tsx
 import { Hero } from "../components/Hero";
 import { Features } from "../components/Features";
 import { Pricing } from "../components/Pricing";
@@ -10,7 +10,14 @@ import "../../assets/Logo_Iprocess.png";
 export default function Inicio() {
   const { isAuthenticated, loading } = useAuth();
 
-  if (loading) return null;
+if (loading) {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-pulse text-gray-500">Cargando...</div>
+    </div>
+  );
+}
+
 
 
   return (
