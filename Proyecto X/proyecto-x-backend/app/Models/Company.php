@@ -9,8 +9,10 @@ class Company extends Model
 {
     protected $fillable = [
         'name',
+        'type',
         'slug',
         'plan',
+        'plan_id',
         'is_active'
     ];
 
@@ -58,4 +60,5 @@ class Company extends Model
     {
         return $this->plan === 'individual';
     }
+    
 }

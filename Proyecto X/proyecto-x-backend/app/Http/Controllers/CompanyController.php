@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Str;
 use App\Models\Company;
 use App\Models\Plan;
 use Illuminate\Http\Request;
@@ -44,10 +45,12 @@ class CompanyController extends Controller
 
             // Crear empresa
             $company = Company::create([
-                'name'    => $companyName,
-                'type'    => $plan->type,
-                'status'  => 'trial',
-                'plan_id' => $plan->id
+                'name'      => $companyName,
+                'slug'      => Str::slug($companyName) . '-' . uniqid(),
+                'type'      => $plan->type,
+                'plan_id'   => $plan->id,
+                'plan'      => $plan->name, // o $plan->type según tu estructura
+                'is_active' => true,
             ]);
 
             // Asignar empresa al usuario

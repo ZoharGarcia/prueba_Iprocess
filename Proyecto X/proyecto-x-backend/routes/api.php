@@ -14,9 +14,11 @@ use App\Mail\ResetPasswordCodeMail;
 use App\Http\Controllers\Auth\RegisterController;
 use Carbon\Carbon;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Admin\CompanyController;
+//use App\Http\Controllers\Admin\CompanyController;
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\Company\CompanyUserController;
 use App\Http\Controllers\Company\DeviceController;
+use App\Http\Controllers\Auth\VerifyEmailController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,10 +29,15 @@ use App\Http\Controllers\Company\DeviceController;
 Route::post('/login', [LoginController::class, 'login']);
 
 // ===============================
-// REGISTRO
+// REGISTRO Y VERIFICACIÓN DE CORREO
 // ===============================
 Route::post('/register', [RegisterController::class, 'register']);
 
+// Verificar código de 6 dígitos
+Route::post('/verify-email-code', [VerifyEmailController::class, 'verify']);
+
+// Reenviar código de verificación (opcional pero recomendado)
+Route::post('/resend-verification-code', [VerifyEmailController::class, 'resend']);
 /*
 |--------------------------------------------------------------------------
 | VERIFICACIÓN DE CORREO ELECTRÓNICO
@@ -292,22 +299,42 @@ Route::middleware(['auth:sanctum', 'super.admin'])
 
 /*
 |--------------------------------------------------------------------------
-| RUTAS DE GESTIÓN DE USUARIOS POR EMPRESA
+| RUTAS DE EMPRESA
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth:sanctum', 'company.active'])
+Route::middleware('auth:sanctum')
     ->prefix('company')
     ->group(function () {
 
-        Route::post('/users', [CompanyUserController::class, 'store'])
-            ->middleware([
-                'owner.only',
-                'plan.business',
-                'check.user.limit'
-            ]);
+        // ===================================================================
+        // ASIGNAR PLAN Y CREAR EMPRESA
+        // ===================================================================
+        // Esta ruta es el primer paso después del login.
+        // NO requiere empresa activa (aún no existe).
+        // Opcional: middleware para evitar llamadas duplicadas si el usuario ya tiene empresa.
+        Route::post('/assign-plan', [CompanyController::class, 'assignPlan'])
+            ->middleware('no.company.assigned') // ← crea este middleware si lo deseas (ver abajo)
+            ->name('company.assign-plan');
 
-        Route::get('/users', [CompanyUserController::class, 'index']);
+        // ===================================================================
+        // RUTAS QUE REQUIEREN EMPRESA ACTIVA
+        // ===================================================================
+        Route::middleware('company.active')->group(function () {
+
+            // Agregar usuario a la empresa (solo owner + plan business + límite de usuarios)
+            Route::post('/users', [CompanyUserController::class, 'store'])
+                ->middleware(['owner.only', 'plan.business', 'check.user.limit'])
+                ->name('company.users.store');
+
+            // Listar usuarios de la empresa
+            Route::get('/users', [CompanyUserController::class, 'index'])
+                ->name('company.users.index');
+
+            // Puedes agregar aquí más rutas que necesiten empresa activa,
+            // por ejemplo: actualizar datos de empresa, facturación, etc.
+            // Route::patch('/settings', [CompanyController::class, 'updateSettings'])->name('company.settings.update');
+        });
     });
 
 /*
@@ -351,4 +378,8 @@ Route::get('/enviar', function () {
     );
 
     return 'Correo enviado correctamente';
+});
+
+Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
+    return response()->json($request->user()->load('company'));
 });

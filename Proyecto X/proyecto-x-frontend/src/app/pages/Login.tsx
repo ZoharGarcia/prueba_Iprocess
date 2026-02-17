@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import "../../styles/login.css";
 import "../../assets/Logo_Iprocess.png";
 
@@ -23,9 +23,10 @@ function getApiBaseUrl(): string {
 
 export function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [form, setForm] = useState<FormState>({
-    email: "",
+    email: (location.state?.email as string) || "", // prellenar si viene de verificación fallida
     password: "",
     remember: true,
   });
@@ -63,7 +64,7 @@ export function Login() {
     setUiError(null);
 
     try {
-      const res = await fetch(`${getApiBaseUrl()}/login`, {
+      const loginRes = await fetch(`${getApiBaseUrl()}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -72,28 +73,73 @@ export function Login() {
         }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const loginData = await loginRes.json().catch(() => ({}));
 
-      if (!res.ok) {
+      if (!loginRes.ok) {
+        // ── Caso especial: email no verificado ────────────────────────────
+        if (
+          loginRes.status === 403 &&
+          (loginData.error_code === "email_not_verified" ||
+            loginData.message?.toLowerCase().includes("verificar") ||
+            loginData.message?.toLowerCase().includes("verified"))
+        ) {
+          navigate("/verification", {
+            replace: true,
+            state: {
+              email: loginData.email || form.email.trim(),
+              message:
+                loginData.message ||
+                "Tu cuenta aún no está verificada. Por favor ingresa el código que te enviamos a tu correo.",
+            },
+          });
+          return;
+        }
+
+        // Otros errores comunes
         const msg =
-          data.message ||
-          data.errors?.email?.[0] ||
-          data.errors?.password?.[0] ||
-          "No se pudo iniciar sesión";
+          loginData.message ||
+          loginData.errors?.email?.[0] ||
+          loginData.errors?.password?.[0] ||
+          "No se pudo iniciar sesión. Verifica tus credenciales.";
         setUiError(msg);
         return;
       }
 
-      // Guarda token si existe (tolerante a distintos nombres)
-      const token = data.token || data.access_token || data.auth_token;
-      if (token) {
-        const storage = form.remember ? localStorage : sessionStorage;
-        storage.setItem("auth_token", token);
+      // Login exitoso → guardar token
+      const token = loginData.token || loginData.access_token || loginData.auth_token;
+      if (!token) {
+        setUiError("No se recibió token de autenticación");
+        return;
       }
 
-      navigate("/dashboard", { replace: true });
-    } catch {
-      setUiError("Error de conexión");
+      const storage = form.remember ? localStorage : sessionStorage;
+      storage.setItem("auth_token", token);
+
+      // Verificar datos del usuario actual (/me)
+      const meRes = await fetch(`${getApiBaseUrl()}/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      });
+
+      if (!meRes.ok) {
+        storage.removeItem("auth_token");
+        setUiError("Sesión inválida. Por favor intenta de nuevo.");
+        return;
+      }
+
+      const user = await meRes.json();
+
+      // Redirección según estado de la cuenta
+      if (user.company_id) {
+        navigate("/dashboard", { replace: true });
+      } else {
+        navigate("/select-plan", { replace: true });
+      }
+    } catch (err) {
+      console.error("Error en login o verificación:", err);
+      setUiError("Error de conexión. Intenta nuevamente en unos momentos.");
     } finally {
       setLoading(false);
     }
@@ -124,6 +170,28 @@ export function Login() {
             {uiError && (
               <div className="auth-error" role="alert">
                 {uiError}
+
+                {/* Botón de acción rápida si parece ser error de verificación */}
+                {(uiError.toLowerCase().includes("verificar") ||
+                  uiError.toLowerCase().includes("verified")) && (
+                  <div style={{ marginTop: "16px", textAlign: "center" }}>
+                    <button
+                      type="button"
+                      className="auth-button auth-button--secondary"
+                      onClick={() =>
+                        navigate("/verification", {
+                          state: {
+                            email: form.email.trim(),
+                            message: "Ingresa el código de verificación que te enviamos.",
+                          },
+                        })
+                      }
+                      style={{ padding: "8px 16px" }}
+                    >
+                      Verificar mi correo ahora
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -179,12 +247,12 @@ export function Login() {
               <Link className="auth-register__link" to="/register">
                 Regístrate
               </Link>
+            </div>
 
-               <div className="auth-register">
-                <Link className="auth-register__link" to="/forgot-password">
-                 ¿Olvidaste tu contraseña?
-                </Link>
-               </div>
+            <div className="auth-register">
+              <Link className="auth-register__link" to="/forgot-password">
+                ¿Olvidaste tu contraseña?
+              </Link>
             </div>
           </form>
         </main>

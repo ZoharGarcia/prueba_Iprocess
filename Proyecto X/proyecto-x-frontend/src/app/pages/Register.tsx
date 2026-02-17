@@ -1,24 +1,16 @@
-import { useMemo, useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "../../styles/register.css";
 import "../../assets/Logo_Iprocess.png";
 
-type FormState = {
-  company_name: string;
-  plan_id: string;
+type RegisterForm = {
   name: string;
   email: string;
   password: string;
   passwordConfirm: string;
 };
 
-type Touched = Record<keyof FormState, boolean>;
-
-type Plan = {
-  id: number;
-  name: string;
-  // Puedes agregar más campos si los devuelves (description, price, etc.)
-};
+type TouchedRegister = Record<keyof RegisterForm, boolean>;
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -30,120 +22,292 @@ function getApiBaseUrl(): string {
 export function Register() {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState<FormState>({
-    company_name: "",
-    plan_id: "",
+  const [step, setStep] = useState<"register" | "verify">("register");
+
+  // Registro
+  const [registerForm, setRegisterForm] = useState<RegisterForm>({
     name: "",
     email: "",
     password: "",
     passwordConfirm: "",
   });
 
-  const [touched, setTouched] = useState<Touched>({
-    company_name: false,
-    plan_id: false,
+  const [touched, setTouched] = useState<TouchedRegister>({
     name: false,
     email: false,
     password: false,
     passwordConfirm: false,
   });
 
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [loading, setLoading] = useState(false);
+  // Verificación
+  const [verifyCode, setVerifyCode] = useState("");
+  const [savedEmail, setSavedEmail] = useState("");
+
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+
   const [uiError, setUiError] = useState<string | null>(null);
+  const [uiSuccess, setUiSuccess] = useState<string | null>(null);
 
-  // Cargar planes al montar el componente
-  useEffect(() => {
-    const fetchPlans = async () => {
-      try {
-        const res = await fetch(`${getApiBaseUrl()}/plans`);
-        if (res.ok) {
-          const data = await res.json();
-          setPlans(Array.isArray(data) ? data : data.data ?? []);
-        }
-      } catch (err) {
-        console.error("Error al cargar planes", err);
-      }
-    };
-    fetchPlans();
-  }, []);
+  // Validaciones del formulario de registro
+  const registerErrors = useMemo(() => {
+    const e: Partial<Record<keyof RegisterForm, string>> = {};
 
-  const errors = useMemo(() => {
-    const e: Partial<Record<keyof FormState, string>> = {};
+    if (!registerForm.name.trim()) e.name = "Ingresa tu nombre";
+    else if (registerForm.name.trim().length < 2) e.name = "Mínimo 2 caracteres";
 
-    // Empresa
-    if (!form.company_name.trim()) e.company_name = "Ingresa el nombre de la empresa";
-    else if (form.company_name.trim().length < 2) e.company_name = "Mínimo 2 caracteres";
+    if (!registerForm.email.trim()) e.email = "Ingresa tu correo";
+    else if (!emailRegex.test(registerForm.email)) e.email = "Correo inválido";
 
-    // Plan
-    if (!form.plan_id) e.plan_id = "Selecciona un plan";
+    if (!registerForm.password) e.password = "Ingresa contraseña";
+    else if (registerForm.password.length < 6) e.password = "Mínimo 6 caracteres";
 
-    // Usuario
-    if (!form.name.trim()) e.name = "Ingresa tu nombre";
-    else if (form.name.trim().length < 2) e.name = "Mínimo 2 caracteres";
-
-    if (!form.email.trim()) e.email = "Ingresa tu correo";
-    else if (!emailRegex.test(form.email)) e.email = "Correo inválido";
-
-    if (!form.password) e.password = "Ingresa contraseña";
-    else if (form.password.length < 6) e.password = "Mínimo 6 caracteres";
-
-    if (!form.passwordConfirm) e.passwordConfirm = "Confirma contraseña";
-    else if (form.password !== form.passwordConfirm)
+    if (!registerForm.passwordConfirm) e.passwordConfirm = "Confirma contraseña";
+    else if (registerForm.password !== registerForm.passwordConfirm)
       e.passwordConfirm = "No coinciden";
 
     return e;
-  }, [form]);
+  }, [registerForm]);
 
-  const canSubmit = !loading && Object.keys(errors).length === 0;
+  const canRegister = !registerLoading && Object.keys(registerErrors).length === 0;
 
-  function setField<K extends keyof FormState>(key: K, value: string) {
-    setForm((p) => ({ ...p, [key]: value }));
+  function setRegisterField<K extends keyof RegisterForm>(key: K, value: string) {
+    setRegisterForm((p) => ({ ...p, [key]: value }));
   }
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  // Registro
+  async function handleRegister(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (!canRegister) return;
 
-    setLoading(true);
+    setRegisterLoading(true);
     setUiError(null);
+    setUiSuccess(null);
 
     try {
       const res = await fetch(`${getApiBaseUrl()}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          company_name: form.company_name.trim(),
-          plan_id: parseInt(form.plan_id, 10),
-          name: form.name.trim(),
-          email: form.email.trim(),
-          password: form.password,
-          password_confirmation: form.passwordConfirm,
+          name: registerForm.name.trim(),
+          email: registerForm.email.trim(),
+          password: registerForm.password,
+          password_confirmation: registerForm.passwordConfirm,
+        }),
+      });
+
+      const data = (await res.json().catch(() => ({}))) as any;
+
+      if (!res.ok) {
+        let msg = data.message || "No se pudo registrar";
+
+        // Manejo seguro de errores { "email": ["ya existe"], "name": ["muy corto"] }
+        if (data.errors && typeof data.errors === "object" && !Array.isArray(data.errors)) {
+          const firstErrorArray = Object.values(data.errors)[0];
+          if (Array.isArray(firstErrorArray) && firstErrorArray.length > 0) {
+            msg = firstErrorArray[0];
+          }
+        }
+
+        setUiError(msg);
+        return;
+      }
+
+      // Registro exitoso → pasar a verificación
+      setSavedEmail(registerForm.email.trim());
+      setStep("verify");
+      setUiSuccess("¡Registro exitoso! Revisa tu correo para el código de verificación.");
+    } catch {
+      setUiError("Error de conexión");
+    } finally {
+      setRegisterLoading(false);
+    }
+  }
+
+  // Verificar código
+  async function handleVerify() {
+    if (verifyCode.trim().length !== 6 || !/^\d+$/.test(verifyCode)) {
+      setUiError("Ingresa un código válido de 6 dígitos");
+      return;
+    }
+
+    setVerifyLoading(true);
+    setUiError(null);
+
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/verify-email-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: savedEmail,
+          code: verifyCode.trim(),
         }),
       });
 
       const data = await res.json().catch(() => ({}));
 
-    if (!res.ok) {
-      const dataTyped = data as { message?: string; errors?: Record<string, string[]> };
+      if (!res.ok) {
+        setUiError(data.message || "Código inválido o expirado");
+        return;
+      }
 
-      const msg =
-        dataTyped.message ||
-        (dataTyped.errors && Object.values(dataTyped.errors)[0]?.[0]) ||
-        "No se pudo registrar";
+      setUiSuccess("¡Correo verificado correctamente! Ahora puedes iniciar sesión.");
 
-      setUiError(msg);
-      return;
-    }
-      // Registro exitoso → redirigir a login
-      navigate("/login", { replace: true });
+      setTimeout(() => {
+        navigate("/login", {
+          replace: true,
+          state: { verificationSuccess: "¡Cuenta verificada! Inicia sesión." },
+        });
+      }, 2000);
     } catch {
       setUiError("Error de conexión");
     } finally {
-      setLoading(false);
+      setVerifyLoading(false);
     }
   }
 
+  // Reenviar código
+  async function handleResend() {
+    setResendLoading(true);
+    setUiError(null);
+    setUiSuccess(null);
+
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/resend-verification-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: savedEmail }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setUiError(data.message || "No se pudo reenviar el código");
+        return;
+      }
+
+      setUiSuccess("¡Código reenviado! Revisa tu correo.");
+      setTimeout(() => setUiSuccess(null), 5000);
+    } catch {
+      setUiError("Error de conexión");
+    } finally {
+      setResendLoading(false);
+    }
+  }
+
+  // ====================== PANTALLA DE REGISTRO ======================
+  if (step === "register") {
+    return (
+      <div className="auth-shell">
+        <div className="auth-split">
+          <aside className="auth-brand">
+            <div className="auth-brand__logoWrap">
+              <div style={{ fontWeight: 800, fontSize: 18, letterSpacing: "0.06em" }}>
+                IPROCESS
+              </div>
+            </div>
+
+            <div className="auth-brand__divider" />
+            <h2 className="auth-brand__title">Proyecto X</h2>
+            <p className="auth-brand__subtitle">Regístrate para comenzar</p>
+          </aside>
+
+          <main className="auth-panel">
+            <form className="auth-form" onSubmit={handleRegister} noValidate>
+              <div className="auth-header">
+                <h1>Crear cuenta</h1>
+                <p>Completa tus datos para registrarte.</p>
+              </div>
+
+              {uiSuccess && <div className="auth-success">{uiSuccess}</div>}
+              {uiError && <div className="auth-error">{uiError}</div>}
+
+              <label className="auth-label" htmlFor="name">
+                Tu nombre
+                <input
+                  id="name"
+                  className="auth-input"
+                  value={registerForm.name}
+                  onChange={(e) => setRegisterField("name", e.target.value)}
+                  onBlur={() => setTouched((p) => ({ ...p, name: true }))}
+                  autoComplete="name"
+                  placeholder="Tu nombre completo"
+                />
+                {touched.name && registerErrors.name && (
+                  <div className="auth-field-error">{registerErrors.name}</div>
+                )}
+              </label>
+
+              <label className="auth-label" htmlFor="email">
+                Correo
+                <input
+                  id="email"
+                  className="auth-input"
+                  type="email"
+                  value={registerForm.email}
+                  onChange={(e) => setRegisterField("email", e.target.value)}
+                  onBlur={() => setTouched((p) => ({ ...p, email: true }))}
+                  autoComplete="email"
+                  placeholder="tucorreo@ejemplo.com"
+                />
+                {touched.email && registerErrors.email && (
+                  <div className="auth-field-error">{registerErrors.email}</div>
+                )}
+              </label>
+
+              <label className="auth-label" htmlFor="password">
+                Contraseña
+                <input
+                  id="password"
+                  className="auth-input"
+                  type="password"
+                  value={registerForm.password}
+                  onChange={(e) => setRegisterField("password", e.target.value)}
+                  onBlur={() => setTouched((p) => ({ ...p, password: true }))}
+                  autoComplete="new-password"
+                  placeholder="Mínimo 6 caracteres"
+                />
+                {touched.password && registerErrors.password && (
+                  <div className="auth-field-error">{registerErrors.password}</div>
+                )}
+              </label>
+
+              <label className="auth-label" htmlFor="passwordConfirm">
+                Confirmar contraseña
+                <input
+                  id="passwordConfirm"
+                  className="auth-input"
+                  type="password"
+                  value={registerForm.passwordConfirm}
+                  onChange={(e) => setRegisterField("passwordConfirm", e.target.value)}
+                  onBlur={() => setTouched((p) => ({ ...p, passwordConfirm: true }))}
+                  autoComplete="new-password"
+                  placeholder="Repite tu contraseña"
+                />
+                {touched.passwordConfirm && registerErrors.passwordConfirm && (
+                  <div className="auth-field-error">{registerErrors.passwordConfirm}</div>
+                )}
+              </label>
+
+              <button className="auth-button" type="submit" disabled={!canRegister}>
+                {registerLoading ? "Creando cuenta..." : "Registrarse"}
+              </button>
+
+              <div className="auth-register">
+                <span>¿Ya tienes una cuenta?</span>{" "}
+                <Link className="auth-register__link" to="/login">
+                  Inicia sesión
+                </Link>
+              </div>
+            </form>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // ====================== PANTALLA DE VERIFICACIÓN ======================
   return (
     <div className="auth-shell">
       <div className="auth-split">
@@ -156,140 +320,62 @@ export function Register() {
 
           <div className="auth-brand__divider" />
           <h2 className="auth-brand__title">Proyecto X</h2>
-          <p className="auth-brand__subtitle">Crea tu cuenta empresarial para continuar</p>
+          <p className="auth-brand__subtitle">Verifica tu correo</p>
         </aside>
 
         <main className="auth-panel">
-          <form className="auth-form" onSubmit={onSubmit} noValidate>
+          <div className="auth-form">
             <div className="auth-header">
-              <h1>Crear cuenta</h1>
-              <p>Completa los datos para registrarte.</p>
+              <h1>Verifica tu cuenta</h1>
+              <p>
+                Enviamos un código de 6 dígitos a <strong>{savedEmail}</strong>
+              </p>
             </div>
 
-            {uiError && (
-              <div className="auth-error" role="alert">
-                {uiError}
-              </div>
-            )}
+            {uiSuccess && <div className="auth-success">{uiSuccess}</div>}
+            {uiError && <div className="auth-error">{uiError}</div>}
 
-            {/* Nombre de la empresa */}
-            <label className="auth-label" htmlFor="company_name">
-              Nombre de la empresa
+            <label className="auth-label" htmlFor="code">
+              Código de verificación
               <input
-                id="company_name"
+                id="code"
                 className="auth-input"
-                value={form.company_name}
-                onChange={(e) => setField("company_name", e.target.value)}
-                onBlur={() => setTouched((p) => ({ ...p, company_name: true }))}
-                placeholder="Nombre de tu empresa"
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={verifyCode}
+                onChange={(e) =>
+                  setVerifyCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                }
+                placeholder="123456"
+                autoFocus
               />
-              {touched.company_name && errors.company_name && (
-                <div className="auth-field-error">{errors.company_name}</div>
-              )}
             </label>
 
-            {/* Selección de plan */}
-            <label className="auth-label" htmlFor="plan">
-              Plan
-              <select
-                id="plan"
-                className="auth-input"
-                value={form.plan_id}
-                onChange={(e) => setField("plan_id", e.target.value)}
-                onBlur={() => setTouched((p) => ({ ...p, plan_id: true }))}
-              >
-                <option value="">Selecciona un plan</option>
-                {plans.map((plan) => (
-                  <option key={plan.id} value={plan.id}>
-                    {plan.name}
-                  </option>
-                ))}
-              </select>
-              {touched.plan_id && errors.plan_id && (
-                <div className="auth-field-error">{errors.plan_id}</div>
-              )}
-            </label>
-
-            {/* Nombre del propietario */}
-            <label className="auth-label" htmlFor="name">
-              Nombre del responsable
-              <input
-                id="name"
-                className="auth-input"
-                value={form.name}
-                onChange={(e) => setField("name", e.target.value)}
-                onBlur={() => setTouched((p) => ({ ...p, name: true }))}
-                autoComplete="name"
-                placeholder="Tu nombre"
-              />
-              {touched.name && errors.name && (
-                <div className="auth-field-error">{errors.name}</div>
-              )}
-            </label>
-
-            {/* Correo, contraseña y confirmación (sin cambios) */}
-            <label className="auth-label" htmlFor="email">
-              Correo
-              <input
-                id="email"
-                className="auth-input"
-                type="email"
-                value={form.email}
-                onChange={(e) => setField("email", e.target.value)}
-                onBlur={() => setTouched((p) => ({ ...p, email: true }))}
-                autoComplete="email"
-                placeholder="tucorreo@ejemplo.com"
-              />
-              {touched.email && errors.email && (
-                <div className="auth-field-error">{errors.email}</div>
-              )}
-            </label>
-
-            <label className="auth-label" htmlFor="password">
-              Contraseña
-              <input
-                id="password"
-                className="auth-input"
-                type="password"
-                value={form.password}
-                onChange={(e) => setField("password", e.target.value)}
-                onBlur={() => setTouched((p) => ({ ...p, password: true }))}
-                autoComplete="new-password"
-                placeholder="Mínimo 6 caracteres"
-              />
-              {touched.password && errors.password && (
-                <div className="auth-field-error">{errors.password}</div>
-              )}
-            </label>
-
-            <label className="auth-label" htmlFor="passwordConfirm">
-              Confirmar contraseña
-              <input
-                id="passwordConfirm"
-                className="auth-input"
-                type="password"
-                value={form.passwordConfirm}
-                onChange={(e) => setField("passwordConfirm", e.target.value)}
-                onBlur={() => setTouched((p) => ({ ...p, passwordConfirm: true }))}
-                autoComplete="new-password"
-                placeholder="Repite tu contraseña"
-              />
-              {touched.passwordConfirm && errors.passwordConfirm && (
-                <div className="auth-field-error">{errors.passwordConfirm}</div>
-              )}
-            </label>
-
-            <button className="auth-button" type="submit" disabled={!canSubmit}>
-              {loading ? "Creando cuenta..." : "Crear cuenta"}
+            <button
+              className="auth-button"
+              onClick={handleVerify}
+              disabled={verifyLoading || verifyCode.length !== 6}
+            >
+              {verifyLoading ? "Verificando..." : "Verificar"}
             </button>
 
-            <div className="auth-register">
-              <span>¿Ya tienes una cuenta?</span>{" "}
+            <button
+              type="button"
+              className="auth-button auth-button--secondary"
+              onClick={handleResend}
+              disabled={resendLoading}
+              style={{ marginTop: "12px", background: "transparent", color: "#007bff" }}
+            >
+              {resendLoading ? "Enviando..." : "Reenviar código"}
+            </button>
+
+            <div className="auth-register" style={{ marginTop: "20px" }}>
               <Link className="auth-register__link" to="/login">
-                Inicia sesión
+                Volver al inicio de sesión
               </Link>
             </div>
-          </form>
+          </div>
         </main>
       </div>
     </div>

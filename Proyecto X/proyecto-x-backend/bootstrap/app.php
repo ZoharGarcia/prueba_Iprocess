@@ -3,7 +3,15 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+
+// Importa todos los middlewares para usar nombres cortos (más legible)
+use App\Http\Middleware\SuperAdminMiddleware;
+use App\Http\Middleware\EnsureCompanyIsActive;
+use App\Http\Middleware\EnsureUserIsOwner;
+use App\Http\Middleware\EnsureBusinessPlan;
+use App\Http\Middleware\EnsureNoCompanyAssigned;
 use App\Http\Middleware\CheckUserLimit;
+use App\Http\Middleware\EnsureUserHasCompany;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,19 +23,18 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
 
         $middleware->alias([
-            'super.admin'   => \App\Http\Middleware\SuperAdminMiddleware::class,
-            'company.active'=> \App\Http\Middleware\EnsureCompanyIsActive::class,
-            'owner.only'    => \App\Http\Middleware\EnsureUserIsOwner::class,
-            'plan.business' => \App\Http\Middleware\EnsureBusinessPlan::class,
+            'super.admin'         => SuperAdminMiddleware::class,
+            'company.active'      => EnsureCompanyIsActive::class,
+            'owner.only'          => EnsureUserIsOwner::class,
+            'plan.business'       => EnsureBusinessPlan::class,
+            'no.company.assigned' => EnsureNoCompanyAssigned::class,
+            'check.user.limit'    => CheckUserLimit::class,
+            'has.company'         => EnsureUserHasCompany::class,
         ]);
 
-        $middleware->alias([
-            'check.user.limit' => CheckUserLimit::class,
-        ]);
+        // Si quieres algún middleware global (se ejecuta en todas las rutas):
+        // $middleware->append(AlgunMiddlewareGlobal::class);
 
-        $middleware->alias([
-            'has.company' => \App\Http\Middleware\EnsureUserHasCompany::class,
-        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

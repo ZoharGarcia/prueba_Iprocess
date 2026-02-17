@@ -10,7 +10,8 @@ import { Register } from "./pages/Register";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { VerifyResetCode } from "./pages/VerifyResetCode";
 import { ChangePassword } from "./pages/ChangePassword";
-
+import { SelectPlan } from "./pages/SelectPlan"; // ← Nueva importación
+import { Verification } from "./pages/Verification"; // ← Nueva importación
 
 export const router = createBrowserRouter([
   
@@ -19,8 +20,8 @@ export const router = createBrowserRouter([
   { path: "/forgot-password", Component: ForgotPassword },
   { path: "/verify-reset-code", Component: VerifyResetCode },
   { path: "/change-password", Component: ChangePassword },
-
-
+  { path: "/select-plan", Component: SelectPlan }, // ← Ruta agregada
+  { path: "/verification", Component: Verification }, // ← Ruta agregada
   {
     path: "/",
     Component: RootLayout,
