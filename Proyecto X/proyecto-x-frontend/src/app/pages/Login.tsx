@@ -1,7 +1,7 @@
+import { useAuth } from "@/hooks/useAuth";
 import { useMemo, useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "../../styles/login.css";
-import "../../assets/Logo_Iprocess.png";
 
 type FormState = {
   email: string;
@@ -24,9 +24,10 @@ function getApiBaseUrl(): string {
 export function Login() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { setSession } = useAuth();
 
   const [form, setForm] = useState<FormState>({
-    email: (location.state?.email as string) || "", // prellenar si viene de verificación fallida
+    email: (location.state?.email as string) || "",
     password: "",
     remember: true,
   });
@@ -56,6 +57,8 @@ export function Login() {
     setForm((p) => ({ ...p, [key]: value }));
   }
 
+
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!canSubmit) return;
@@ -64,9 +67,10 @@ export function Login() {
     setUiError(null);
 
     try {
+      // 1) Login
       const loginRes = await fetch(`${getApiBaseUrl()}/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
           email: form.email.trim(),
           password: form.password,
@@ -76,26 +80,8 @@ export function Login() {
       const loginData = await loginRes.json().catch(() => ({}));
 
       if (!loginRes.ok) {
-        // ── Caso especial: email no verificado ────────────────────────────
-        if (
-          loginRes.status === 403 &&
-          (loginData.error_code === "email_not_verified" ||
-            loginData.message?.toLowerCase().includes("verificar") ||
-            loginData.message?.toLowerCase().includes("verified"))
-        ) {
-          navigate("/verification", {
-            replace: true,
-            state: {
-              email: loginData.email || form.email.trim(),
-              message:
-                loginData.message ||
-                "Tu cuenta aún no está verificada. Por favor ingresa el código que te enviamos a tu correo.",
-            },
-          });
-          return;
-        }
-
-        // Otros errores comunes
+        // Caso especial: email no verificado
+       
         const msg =
           loginData.message ||
           loginData.errors?.email?.[0] ||
@@ -105,8 +91,10 @@ export function Login() {
         return;
       }
 
-      // Login exitoso → guardar token
-      const token = loginData.token || loginData.access_token || loginData.auth_token;
+      // 2) Token
+      const token: string | undefined =
+        loginData.token || loginData.access_token || loginData.auth_token;
+
       if (!token) {
         setUiError("No se recibió token de autenticación");
         return;
@@ -115,7 +103,7 @@ export function Login() {
       const storage = form.remember ? localStorage : sessionStorage;
       storage.setItem("auth_token", token);
 
-      // Verificar datos del usuario actual (/me)
+      // 3) /me
       const meRes = await fetch(`${getApiBaseUrl()}/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -131,8 +119,11 @@ export function Login() {
 
       const user = await meRes.json();
 
-      // Redirección según estado de la cuenta
-      if (user.company_id) {
+      // ✅ 4) Sincroniza AuthContext
+      setSession(token, user);
+
+      // 5) Redirección
+      if (user?.company_id) {
         navigate("/inicio", { replace: true });
       } else {
         navigate("/select-plan", { replace: true });
@@ -145,90 +136,98 @@ export function Login() {
     }
   }
 
-  return (
-    <div className="auth-shell">
-      <div className="auth-split">
-        <aside className="auth-brand">
-          <div className="auth-brand__logoWrap">
-            <div style={{ fontWeight: 800, fontSize: 18, letterSpacing: "0.06em" }}>
-              IPROCESSs
-            </div>
+return (
+  <div className="auth-shell">
+    <div className="auth-split">
+      <aside className="auth-brand">
+        <div className="auth-brand__logoWrap">
+          {/* ✅ Logo real (si lo tienes en /public/Logo_Iprocess.png) */}
+          <img
+            src="/Logo_Iprocess.png"
+            alt="IProcess"
+            style={{ height: 42, width: "auto", display: "block" }}
+          />
+
+          {/* ✅ Marca corregida */}
+          <div style={{ marginTop: 10, fontWeight: 800, fontSize: 18, letterSpacing: "0.06em" }}>
+            IPROCESS
+          </div>
+        </div>
+
+        <div className="auth-brand__divider" />
+        <h2 className="auth-brand__title">Proyecto X</h2>
+        <p className="auth-brand__subtitle">Accede a tu plataforma</p>
+      </aside>
+
+      <main className="auth-panel">
+        <form className="auth-form" onSubmit={onSubmit} noValidate>
+          <div className="auth-header">
+            <h1>Iniciar Sesión</h1>
+            <p>Ingresa tus credenciales para continuar.</p>
           </div>
 
-          <div className="auth-brand__divider" />
-          <h2 className="auth-brand__title">Proyecto X</h2>
-          <p className="auth-brand__subtitle">Accede a tu plataforma</p>
-        </aside>
+          {uiError && (
+            <div className="auth-error" role="alert">
+              {uiError}
 
-        <main className="auth-panel">
-          <form className="auth-form" onSubmit={onSubmit} noValidate>
-            <div className="auth-header">
-              <h1>Iniciar Sesión</h1>
-              <p>Ingresa tus credenciales para continuar.</p>
+              {(uiError.toLowerCase().includes("verificar") ||
+                uiError.toLowerCase().includes("verified")) && (
+                <div style={{ marginTop: 16, textAlign: "center" }}>
+                  <button
+                    type="button"
+                    className="auth-button auth-button--secondary"
+                    onClick={() =>
+                      navigate("/verification", {
+                        state: {
+                          email: form.email.trim(),
+                          message: "Ingresa el código de verificación que te enviamos.",
+                        },
+                      })
+                    }
+                    style={{ padding: "8px 16px" }}
+                  >
+                    Verificar mi correo ahora
+                  </button>
+                </div>
+              )}
             </div>
+          )}
 
-            {uiError && (
-              <div className="auth-error" role="alert">
-                {uiError}
-
-                {/* Botón de acción rápida si parece ser error de verificación */}
-                {(uiError.toLowerCase().includes("verificar") ||
-                  uiError.toLowerCase().includes("verified")) && (
-                  <div style={{ marginTop: "16px", textAlign: "center" }}>
-                    <button
-                      type="button"
-                      className="auth-button auth-button--secondary"
-                      onClick={() =>
-                        navigate("/verification", {
-                          state: {
-                            email: form.email.trim(),
-                            message: "Ingresa el código de verificación que te enviamos.",
-                          },
-                        })
-                      }
-                      style={{ padding: "8px 16px" }}
-                    >
-                      Verificar mi correo ahora
-                    </button>
-                  </div>
-                )}
-              </div>
+          <label className="auth-label" htmlFor="email">
+            Correo
+            <input
+              id="email"
+              className="auth-input"
+              type="email"
+              value={form.email}
+              onChange={(e) => setField("email", e.target.value)}
+              onBlur={() => setTouched((p) => ({ ...p, email: true }))}
+              autoComplete="email"
+              placeholder="tucorreo@ejemplo.com"
+            />
+            {touched.email && errors.email && (
+              <div className="auth-field-error">{errors.email}</div>
             )}
+          </label>
 
-            <label className="auth-label" htmlFor="email">
-              Correo
-              <input
-                id="email"
-                className="auth-input"
-                type="email"
-                value={form.email}
-                onChange={(e) => setField("email", e.target.value)}
-                onBlur={() => setTouched((p) => ({ ...p, email: true }))}
-                autoComplete="email"
-                placeholder="tucorreo@ejemplo.com"
-              />
-              {touched.email && errors.email && (
-                <div className="auth-field-error">{errors.email}</div>
-              )}
-            </label>
+          <label className="auth-label" htmlFor="password">
+            Contraseña
+            <input
+              id="password"
+              className="auth-input"
+              type="password"
+              value={form.password}
+              onChange={(e) => setField("password", e.target.value)}
+              onBlur={() => setTouched((p) => ({ ...p, password: true }))}
+              autoComplete="current-password"
+              placeholder="Ingresa tu contraseña"
+            />
+            {touched.password && errors.password && (
+              <div className="auth-field-error">{errors.password}</div>
+            )}
+          </label>
 
-            <label className="auth-label" htmlFor="password">
-              Contraseña
-              <input
-                id="password"
-                className="auth-input"
-                type="password"
-                value={form.password}
-                onChange={(e) => setField("password", e.target.value)}
-                onBlur={() => setTouched((p) => ({ ...p, password: true }))}
-                autoComplete="current-password"
-                placeholder="Ingresa tu contraseña"
-              />
-              {touched.password && errors.password && (
-                <div className="auth-field-error">{errors.password}</div>
-              )}
-            </label>
-
+          <div className="auth-row" style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
             <label className="auth-remember">
               <input
                 type="checkbox"
@@ -238,25 +237,25 @@ export function Login() {
               <span>Recordarme</span>
             </label>
 
-            <button className="auth-button" type="submit" disabled={!canSubmit}>
-              {loading ? "Ingresando..." : "Entrar"}
-            </button>
+            {/* ✅ link cerca del remember (UX mejor) */}
+            <Link className="auth-register__link" to="/forgot-password">
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
 
-            <div className="auth-register">
-              <span>¿No tienes una cuenta?</span>{" "}
-              <Link className="auth-register__link" to="/register">
-                Regístrate
-              </Link>
-            </div>
+          <button className="auth-button" type="submit" disabled={!canSubmit}>
+            {loading ? "Ingresando..." : "Entrar"}
+          </button>
 
-            <div className="auth-register">
-              <Link className="auth-register__link" to="/forgot-password">
-                ¿Olvidaste tu contraseña?
-              </Link>
-            </div>
-          </form>
-        </main>
-      </div>
+          <div className="auth-register">
+            <span>¿No tienes una cuenta?</span>{" "}
+            <Link className="auth-register__link" to="/register">
+              Regístrate
+            </Link>
+          </div>
+        </form>
+      </main>
     </div>
-  );
+  </div>
+);
 }

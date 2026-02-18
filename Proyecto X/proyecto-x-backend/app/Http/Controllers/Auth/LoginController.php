@@ -22,16 +22,6 @@ class LoginController extends Controller
         }
 
         $user = Auth::user();
-
-        // Bloquea login si el correo no está verificado
-        if (is_null($user->email_verified_at)) {
-            return response()->json([
-                'message'              => 'Debes verificar tu correo electrónico antes de iniciar sesión.',
-                'error_code'           => 'email_not_verified',   // ← clave para que frontend lo detecte fácilmente
-                'email'                => $user->email,          // ← útil para prellenar en verificación
-            ], 403);
-        }
-
         // Opcional: Revoca tokens anteriores (buena práctica para seguridad)
         $user->tokens()->delete();
 

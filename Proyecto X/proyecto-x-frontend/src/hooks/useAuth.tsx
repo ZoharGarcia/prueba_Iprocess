@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 type User = {
   id: number;
@@ -15,6 +15,7 @@ type AuthContextType = {
   loading: boolean;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  setSession: (token: string, user?: User | null) => void; // ✅ nuevo
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,20 +35,35 @@ function getApiBaseUrl(): string {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(getToken());
   const [user, setUser] = useState<User | null>(null);
-
-  // Si hay token, empieza en loading true (validando sesión)
   const [loading, setLoading] = useState<boolean>(!!token);
 
-  // Solo autenticado si token válido Y usuario cargado
-  const isAuthenticated = !!token && !!user;
+  const isAuthenticated = useMemo(() => !!token && !!user, [token, user]);
+
+  function setSession(nextToken: string, nextUser: User | null = null) {
+    setToken(nextToken);
+    if (nextUser) setUser(nextUser);
+    setLoading(!nextUser); // si no pasas user, queda "validando"
+  }
+
+  function logout(): void {
+    localStorage.removeItem("auth_token");
+    sessionStorage.removeItem("auth_token");
+    setUser(null);
+    setToken(null);
+    setLoading(false);
+  }
 
   async function refreshUser(): Promise<void> {
     const storedToken = getToken();
 
     if (!storedToken) {
+      setUser(null);
+      setToken(null);
       setLoading(false);
       return;
     }
+
+    setLoading(true);
 
     try {
       const res = await fetch(`${getApiBaseUrl()}/me`, {
@@ -71,16 +87,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  function logout(): void {
-    localStorage.removeItem("auth_token");
-    sessionStorage.removeItem("auth_token");
-    setUser(null);
-    setToken(null);
-    setLoading(false);
-  }
-
   useEffect(() => {
     refreshUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ✅ opcional: si el token cambia en otra pestaña
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== "auth_token") return;
+      refreshUser();
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -93,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         logout,
         refreshUser,
+        setSession,
       }}
     >
       {children}

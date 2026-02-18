@@ -19,6 +19,7 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\Company\CompanyUserController;
 use App\Http\Controllers\Company\DeviceController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Models\Plan;
 
 /*
 |--------------------------------------------------------------------------
@@ -307,33 +308,25 @@ Route::middleware('auth:sanctum')
     ->prefix('company')
     ->group(function () {
 
-        // ===================================================================
-        // ASIGNAR PLAN Y CREAR EMPRESA
-        // ===================================================================
-        // Esta ruta es el primer paso después del login.
-        // NO requiere empresa activa (aún no existe).
-        // Opcional: middleware para evitar llamadas duplicadas si el usuario ya tiene empresa.
+        // ✅ NO requiere suscripción activa (aún no hay empresa)
         Route::post('/assign-plan', [CompanyController::class, 'assignPlan'])
-            ->middleware('no.company.assigned') // ← crea este middleware si lo deseas (ver abajo)
+            ->middleware('no.company.assigned')
             ->name('company.assign-plan');
 
-        // ===================================================================
-        // RUTAS QUE REQUIEREN EMPRESA ACTIVA
-        // ===================================================================
-        Route::middleware('company.active')->group(function () {
+        // ✅ NUEVA RUTA: Activar plan
+        // Está fuera del grupo 'sub.active' para permitir que el usuario pague/active
+        Route::post('/activate-plan', [CompanyController::class, 'activatePlan'])
+             ->name('company.activate-plan');
 
-            // Agregar usuario a la empresa (solo owner + plan business + límite de usuarios)
+        // ✅ Requiere empresa activa + suscripción vigente
+        Route::middleware(['company.active', 'sub.active'])->group(function () {
+
             Route::post('/users', [CompanyUserController::class, 'store'])
                 ->middleware(['owner.only', 'plan.business', 'check.user.limit'])
                 ->name('company.users.store');
 
-            // Listar usuarios de la empresa
             Route::get('/users', [CompanyUserController::class, 'index'])
                 ->name('company.users.index');
-
-            // Puedes agregar aquí más rutas que necesiten empresa activa,
-            // por ejemplo: actualizar datos de empresa, facturación, etc.
-            // Route::patch('/settings', [CompanyController::class, 'updateSettings'])->name('company.settings.update');
         });
     });
 
@@ -381,5 +374,58 @@ Route::get('/enviar', function () {
 });
 
 Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
-    return response()->json($request->user()->load('company'));
+    $user = $request->user()->load('company');
+
+    // Preferimos expiración desde company
+    $expiresAtRaw = $user->company?->plan_expires_at ?? $user->plan_expires_at ?? null;
+$currentPlanId = $user->company?->plan_id ?? null;
+$currentPlanName = $user->company?->plan ?? null;
+    $tz = config('app.timezone', 'America/Managua');
+
+    // Parse seguro en TZ de la app (si ya viene como Carbon, Carbon lo maneja)
+    $planExpiresAt = $expiresAtRaw ? Carbon::parse($expiresAtRaw)->timezone($tz) : null;
+
+    // "Ahora" en TZ de la app
+    $now = Carbon::now($tz);
+
+    // Activo SOLO si no ha vencido por fecha+hora (estricto)
+    // Si ahora >= expires_at -> vencido
+    $isActive = $planExpiresAt ? $now->lt($planExpiresAt) : false;
+
+    // Días restantes: calculado por días calendario (startOfDay), pero:
+    // - si ya venció por hora exacta, devolvemos 0 para no confundir
+    $daysLeft = null;
+    if ($planExpiresAt) {
+        if (! $isActive) {
+            $daysLeft = 0;
+        } else {
+            $daysLeft = $now->copy()->startOfDay()
+                ->diffInDays($planExpiresAt->copy()->startOfDay(), false);
+        }
+    }
+
+    return response()->json([
+        'id' => $user->id,
+        'name' => $user->name,
+        'email' => $user->email,
+
+        // ✅ Plan para el menú
+        // En ISO con TZ (evita corrimiento raro en frontend)
+        'plan_expires_at' => $planExpiresAt?->toIso8601String(),
+        'days_left' => $daysLeft,
+        'is_subscription_active' => $isActive,
+
+        // ✅ Debug útil (puedes quitar luego)
+        'server_now' => $now->toIso8601String(),
+        'app_timezone' => $tz,
+
+        'company_id' => $user->company_id ?? null,
+        'company' => $user->company,
+          'current_plan_id' => $currentPlanId,
+  'current_plan_name' => $currentPlanName,
+    ]);
+});
+
+Route::get('/plans', function () {
+    return Plan::select('id','name','type','price','max_users','max_devices')->get();
 });

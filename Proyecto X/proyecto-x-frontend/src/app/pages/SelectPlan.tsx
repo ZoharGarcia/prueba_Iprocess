@@ -128,7 +128,7 @@ export function SelectPlan() {
         return;
       }
 
-      navigate("/dashboard", { replace: true });
+      navigate("/home", { replace: true });
     } catch (err) {
       console.error("Error en assign-plan:", err);
       setUiError("Error de conexión");
