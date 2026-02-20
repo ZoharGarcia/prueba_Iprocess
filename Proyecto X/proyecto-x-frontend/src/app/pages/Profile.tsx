@@ -144,7 +144,7 @@ export default function Profile() {
     setError("");
 
     try {
-      const res = await fetch(`${apiBase}/api/profile`, {
+      const res = await fetch(`${apiBase}/profile`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,

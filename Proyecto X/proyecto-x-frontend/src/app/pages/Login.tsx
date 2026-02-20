@@ -125,9 +125,9 @@ export function Login() {
       // 5) Redirección
       if (user?.company_id) {
         navigate("/inicio", { replace: true });
-      } else {
-        navigate("/select-plan", { replace: true });
-      }
+      }  else {
+        navigate("/inicio", { replace: true });
+      } 
     } catch (err) {
       console.error("Error en login o verificación:", err);
       setUiError("Error de conexión. Intenta nuevamente en unos momentos.");

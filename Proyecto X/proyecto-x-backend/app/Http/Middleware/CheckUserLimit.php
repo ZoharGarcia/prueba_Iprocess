@@ -11,21 +11,25 @@ class CheckUserLimit
 {
     public function handle(Request $request, Closure $next)
     {
-        $company = Auth::user()->company;
+        $user = Auth::user();
+        $company = $user?->company;
 
-        // 1️⃣ Verificar empresa activa
-        if ($company->status !== 'active' && $company->status !== 'trial') {
-            return response()->json([
-                'error' => 'Cuenta suspendida'
-            ], 403);
+        if (! $company) {
+            return response()->json(['error' => 'Empresa no asignada'], 403);
         }
 
-        // 2️⃣ Verificar límite de usuarios
+        // ✅ Usa la relación correcta (evita conflicto con columna companies.plan)
+        $plan = $company->subscriptionPlan;
+
+        if (! $plan) {
+            return response()->json(['error' => 'Plan no asignado a la empresa'], 422);
+        }
+
         $currentUsers = User::where('company_id', $company->id)->count();
 
-        if ($currentUsers >= $company->plan->max_users) {
+        if ($currentUsers >= (int) $plan->max_users) {
             return response()->json([
-                'error' => 'Límite de usuarios alcanzado para su plan'
+                'error' => 'Límite de usuarios alcanzado para su plan.'
             ], 403);
         }
 

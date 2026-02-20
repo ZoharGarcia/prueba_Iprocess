@@ -303,22 +303,17 @@ Route::middleware(['auth:sanctum', 'super.admin'])
 | RUTAS DE EMPRESA
 |--------------------------------------------------------------------------
 */
-
 Route::middleware('auth:sanctum')
     ->prefix('company')
     ->group(function () {
 
-        // ✅ NO requiere suscripción activa (aún no hay empresa)
         Route::post('/assign-plan', [CompanyController::class, 'assignPlan'])
             ->middleware('no.company.assigned')
             ->name('company.assign-plan');
 
-        // ✅ NUEVA RUTA: Activar plan
-        // Está fuera del grupo 'sub.active' para permitir que el usuario pague/active
         Route::post('/activate-plan', [CompanyController::class, 'activatePlan'])
-             ->name('company.activate-plan');
+            ->name('company.activate-plan');
 
-        // ✅ Requiere empresa activa + suscripción vigente
         Route::middleware(['company.active', 'sub.active'])->group(function () {
 
             Route::post('/users', [CompanyUserController::class, 'store'])
@@ -327,6 +322,10 @@ Route::middleware('auth:sanctum')
 
             Route::get('/users', [CompanyUserController::class, 'index'])
                 ->name('company.users.index');
+
+            Route::post('/users/attach', [CompanyUserController::class, 'attachExisting'])
+                ->middleware(['owner.only', 'plan.business', 'check.user.limit'])
+                ->name('company.users.attach');
         });
     });
 
@@ -408,6 +407,7 @@ $currentPlanName = $user->company?->plan ?? null;
         'id' => $user->id,
         'name' => $user->name,
         'email' => $user->email,
+        'role' => $user->role,
 
         // ✅ Plan para el menú
         // En ISO con TZ (evita corrimiento raro en frontend)

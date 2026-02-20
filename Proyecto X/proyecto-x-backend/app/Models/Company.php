@@ -20,6 +20,7 @@ class Company extends Model
         'is_active',
         'plan_started_at', // Agregado del segundo código
         'plan_expires_at', // Agregado del segundo código
+        'status',
     ];
 
     /**
@@ -37,16 +38,22 @@ class Company extends Model
     |--------------------------------------------------------------------------
     */
 
+ /*
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
     }
+*/
 
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
     }
-
+public function isAdminActive(): bool
+{
+    // administrativo
+    return in_array($this->status, ['active', 'trial'], true);
+}
     public function devices(): HasMany
     {
         return $this->hasMany(Device::class);
@@ -61,51 +68,78 @@ class Company extends Model
     /**
      * Verifica si la compañía está marcada como activa (flag simple).
      */
-    public function isActive(): bool
-    {
-        return $this->is_active;
+public function isActive(): bool
+{
+    // compatibilidad: si ya existe status, manda status; si no, usa is_active
+    if (!is_null($this->status)) {
+        return $this->isAdminActive();
     }
+
+    return (bool) $this->is_active;
+}
 
     /**
      * Verifica si la suscripción es válida (activa y dentro de fecha).
      */
-    public function isSubscriptionActive(): bool
-    {
-        // 1. Debe estar activa manualmente
-        if (! $this->is_active) {
-            return false;
-        }
+public function isSubscriptionActive(): bool
+{
+    if (! $this->is_active) return false;
+    if (! $this->plan_expires_at) return false;
 
-        // 2. Debe tener fecha de expiración
-        if (! $this->plan_expires_at) {
-            return false;
-        }
+    $tz = config('app.timezone', 'America/Managua');
+    $now = now($tz);
 
-        // 3. La fecha actual debe ser menor que la de expiración
-        return now()->lt($this->plan_expires_at);
-    }
+    return $now->lt($this->plan_expires_at->timezone($tz));
+}
 
-    public function isBusiness(): bool
-    {
-        return $this->plan === 'business';
-    }
+public function daysLeft(): ?int
+{
+    if (! $this->plan_expires_at) return null;
 
-    public function isIndividual(): bool
-    {
-        return $this->plan === 'individual';
-    }
+    $tz = config('app.timezone', 'America/Managua');
+    $now = now($tz);
+
+    // si querés días calendario como tu /me:
+    if ($now->gte($this->plan_expires_at->timezone($tz))) return 0;
+
+    return $now->copy()->startOfDay()
+        ->diffInDays($this->plan_expires_at->copy()->timezone($tz)->startOfDay(), false);
+}
+
+
+public function isBusiness(): bool
+{
+    return $this->type === 'business';
+}
+
+public function isIndividual(): bool
+{
+    return $this->type === 'individual';
+}
+
 
     /**
      * Retorna los días restantes o null si no hay fecha definida.
      * Puede retornar negativo si ya venció.
      */
-    public function daysLeft(): ?int
-    {
-        if (! $this->plan_expires_at) {
-            return null;
-        }
 
-        // 'false' como 2do argumento para no obtener valor absoluto (permite negativos)
-        return now()->diffInDays($this->plan_expires_at, false);
+    public function getSubscriptionStatusAttribute(): string
+{
+    if (! $this->plan_expires_at) {
+        return 'expired';
     }
+
+    $tz = config('app.timezone', 'America/Managua');
+    $now = now($tz);
+
+    return $now->lt($this->plan_expires_at->timezone($tz))
+        ? 'active'
+        : 'expired';
+}
+
+public function subscriptionPlan(): BelongsTo
+{
+    return $this->belongsTo(\App\Models\Plan::class, 'plan_id');
+}
+
 }
