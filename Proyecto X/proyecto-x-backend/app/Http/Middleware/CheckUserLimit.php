@@ -18,11 +18,11 @@ class CheckUserLimit
             return response()->json(['error' => 'Empresa no asignada'], 403);
         }
 
-        // ✅ Usa la relación correcta (evita conflicto con columna companies.plan)
+        // ✅ USA LA RELACIÓN CORRECTA (sin conflicto con atributo "plan")
         $plan = $company->subscriptionPlan;
 
         if (! $plan) {
-            return response()->json(['error' => 'Plan no asignado a la empresa'], 422);
+            return response()->json(['error' => 'Plan no asignado a la empresa'], 403);
         }
 
         $currentUsers = User::where('company_id', $company->id)->count();
