@@ -4,6 +4,8 @@ import { Helmet } from "react-helmet-async";
 import { WhatWeDo } from "@/app/components/WhatWeDo";
 import { WhoWeAre } from "@/app/components/WhoWeare";
 import { Verticales } from "@/app/components/Verticales";
+import { WorkProcessSection } from "@/app/components/Entrega";
+
 export default function Inicio() {
   return (
     <>
@@ -20,6 +22,7 @@ export default function Inicio() {
         <Verticales />
         <WhoWeAre />
         <WhatWeDo />
+        <WorkProcessSection />
       </Layout>
     </>
   );

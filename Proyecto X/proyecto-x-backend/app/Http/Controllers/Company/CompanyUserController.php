@@ -36,7 +36,8 @@ class CompanyUserController extends Controller
         }
 
         // ✅ Plan (usa la misma relación que tu middleware)
-        $plan = $company->plan;
+      //  $plan = $company->plan;
+        $plan = $company->subscriptionPlan;
 
         if (! $plan) {
             return response()->json(['error' => 'Plan no asignado a la empresa.'], 422);
@@ -119,17 +120,17 @@ class CompanyUserController extends Controller
             return response()->json(['error' => 'El plan individual no permite múltiples usuarios.'], 403);
         }
 
-        $plan = $company->plan;
+$plan = $company->subscriptionPlan;
 
-        if (! $plan) {
-            return response()->json(['error' => 'Plan no asignado a la empresa.'], 422);
-        }
+if (! $plan) {
+  return response()->json(['error' => 'Plan no asignado a la empresa.'], 422);
+}
 
-        $currentUsers = User::where('company_id', $company->id)->count();
+$currentUsers = User::where('company_id', $company->id)->count();
 
-        if ($currentUsers >= (int) $plan->max_users) {
-            return response()->json(['error' => 'Límite de usuarios alcanzado para su plan.'], 403);
-        }
+if ($currentUsers >= (int) $plan->max_users) {
+  return response()->json(['error' => 'Límite de usuarios alcanzado para su plan.'], 403);
+}
 
         $validated = $request->validate([
             'name'       => 'required|string|max:255',

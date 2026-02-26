@@ -82,7 +82,6 @@ export default function MiPlan() {
   const [activating, setActivating] = useState<number | null>(null);
   const [companyName, setCompanyName] = useState("");
 
-  // ====== Módulo usuarios (solo business) ======
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersPageLoading, setUsersPageLoading] = useState(false);
   const [users, setUsers] = useState<CompanyUser[]>([]);
@@ -96,35 +95,27 @@ export default function MiPlan() {
   const [usersError, setUsersError] = useState<string | null>(null);
   const [usersSuccess, setUsersSuccess] = useState<string | null>(null);
 
-  // Crear usuario nuevo
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
     password: "",
     role: "user" as "user" | "admin",
-    send_email: true, // ✅ nuevo
+    send_email: true,
   });
   const [creatingUser, setCreatingUser] = useState(false);
 
-  // Agregar usuario existente
   const [attachUser, setAttachUser] = useState({
     email: "",
     role: "user" as "user" | "admin",
   });
   const [attachingUser, setAttachingUser] = useState(false);
 
-  // =========================
-  // Redirect si no autenticado (evita warning de React)
-  // =========================
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       navigate("/login", { replace: true });
     }
   }, [loading, isAuthenticated, navigate]);
 
-  // =========================
-  // Fetch /me
-  // =========================
   useEffect(() => {
     if (!isAuthenticated || !token) return;
 
@@ -168,9 +159,6 @@ export default function MiPlan() {
     };
   }, [isAuthenticated, token, apiBase, logout, navigate]);
 
-  // =========================
-  // Fetch /plans
-  // =========================
   useEffect(() => {
     let cancelled = false;
 
@@ -199,7 +187,6 @@ export default function MiPlan() {
 
   const isActive = Boolean(me?.is_subscription_active);
 
-  // ✅ Plan actual
   const currentPlanId =
     typeof me?.current_plan_id === "number"
       ? me.current_plan_id
@@ -210,17 +197,12 @@ export default function MiPlan() {
   const currentPlan =
     currentPlanId != null ? plans.find((p) => p.id === currentPlanId) : null;
 
-  // ✅ Determinar si es plan grupal (business)
   const isBusinessPlan =
     currentPlan?.type === "business" || me?.company?.type === "business";
 
-  // ✅ Permiso UI: solo owner/admin
   const canManageUsers =
     isBusinessPlan && isActive && ["owner", "admin"].includes(me?.role || "");
 
-  // =========================
-  // Activate / Reactivate Plan
-  // =========================
   async function activatePlan(plan: Plan) {
     if (!token) {
       navigate("/login");
@@ -257,7 +239,6 @@ export default function MiPlan() {
         return;
       }
 
-      // re-fetch /me
       try {
         const resMe = await fetch(`${apiBase}/me`, {
           headers: {
@@ -279,9 +260,6 @@ export default function MiPlan() {
     }
   }
 
-  // =========================
-  // Company Users: GET
-  // =========================
   async function fetchCompanyUsers(page = 1) {
     if (!token) return;
 
@@ -319,16 +297,12 @@ export default function MiPlan() {
     }
   }
 
-  // Auto-load users cuando ya aplica
   useEffect(() => {
     if (!canManageUsers) return;
     fetchCompanyUsers(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canManageUsers]);
 
-  // =========================
-  // Company Users: POST (crear nuevo + correo)
-  // =========================
   async function createCompanyUser() {
     if (!token) return;
 
@@ -355,7 +329,7 @@ export default function MiPlan() {
           email: newUser.email.trim(),
           password: newUser.password,
           role: newUser.role,
-          send_email: newUser.send_email, // ✅ nuevo
+          send_email: newUser.send_email,
         }),
       });
 
@@ -370,18 +344,16 @@ export default function MiPlan() {
         return;
       }
 
-      // ✅ feedback
       if (newUser.send_email) {
         setUsersSuccess(
           data?.email_sent
             ? "Usuario creado y correo enviado con credenciales."
-            : "Usuario creado. (El correo no pudo enviarse: revisa configuración MAIL)."
+            : "Usuario creado. No se pudo enviar el correo."
         );
       } else {
         setUsersSuccess("Usuario creado correctamente.");
       }
 
-      // limpiar form (ojo: NO dejar password en pantalla)
       setNewUser({ name: "", email: "", password: "", role: "user", send_email: true });
 
       await fetchCompanyUsers(1);
@@ -390,9 +362,6 @@ export default function MiPlan() {
     }
   }
 
-  // =========================
-  // Company Users: POST (agregar existente)
-  // =========================
   async function attachExistingUser() {
     if (!token) return;
 
@@ -439,9 +408,6 @@ export default function MiPlan() {
     }
   }
 
-  // =========================
-  // Render states
-  // =========================
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -468,7 +434,6 @@ export default function MiPlan() {
           </Button>
         </div>
 
-        {/* Resumen */}
         <section className="rounded-2xl border bg-white shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b">
             <div className="font-semibold text-slate-900">Resumen de suscripción</div>
@@ -514,7 +479,6 @@ export default function MiPlan() {
           </div>
         </section>
 
-        {/* Datos para business */}
         {(isBusinessPlan || plans.some((p) => p.type === "business")) && (
           <section className="rounded-2xl border bg-white shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b">
@@ -536,7 +500,6 @@ export default function MiPlan() {
           </section>
         )}
 
-        {/* Usuarios del plan */}
         {canManageUsers && (
           <section className="rounded-2xl border bg-white shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b flex items-center justify-between gap-3">
@@ -569,7 +532,6 @@ export default function MiPlan() {
                 </div>
               )}
 
-              {/* Crear usuario */}
               <div className="rounded-2xl border p-4">
                 <div className="font-semibold text-slate-900">Agregar usuario (nuevo)</div>
 
@@ -620,7 +582,6 @@ export default function MiPlan() {
                   </div>
                 </div>
 
-                {/* ✅ enviar correo */}
                 <div className="mt-3 flex items-center gap-2">
                   <input
                     id="send_email"
@@ -638,14 +599,8 @@ export default function MiPlan() {
                     {creatingUser ? "Creando..." : "Crear usuario"}
                   </Button>
                 </div>
-
-                <div className="mt-2 text-xs text-muted-foreground">
-                  Nota: enviar contraseñas por correo no es lo ideal. Mejor práctica: “Set password link”.
-                  Pero si lo necesitas así, el backend lo enviará.
-                </div>
               </div>
 
-              {/* Agregar existente */}
               <div className="rounded-2xl border p-4">
                 <div className="font-semibold text-slate-900">Agregar usuario existente</div>
                 <div className="text-xs text-muted-foreground mt-1">
@@ -688,7 +643,6 @@ export default function MiPlan() {
                 </div>
               </div>
 
-              {/* Lista */}
               <div className="rounded-2xl border p-4">
                 <div className="flex items-center justify-between">
                   <div className="font-semibold text-slate-900">Usuarios ({usersMeta.total})</div>
@@ -751,15 +705,10 @@ export default function MiPlan() {
                   )}
                 </div>
               </div>
-
-              <div className="text-xs text-muted-foreground">
-                Nota: el backend puede responder 403/409/404 según permisos o estado del usuario.
-              </div>
             </div>
           </section>
         )}
 
-        {/* Planes */}
         <section className="rounded-2xl border bg-white shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b flex items-center justify-between">
             <div>
@@ -819,7 +768,9 @@ export default function MiPlan() {
                       </div>
 
                       {p.type === "business" && (
-                        <div className="mt-2 text-xs text-muted-foreground">Requiere nombre de empresa.</div>
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          Requiere nombre de empresa.
+                        </div>
                       )}
                     </div>
                   );

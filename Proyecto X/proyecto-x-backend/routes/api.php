@@ -429,3 +429,6 @@ $currentPlanName = $user->company?->plan ?? null;
 Route::get('/plans', function () {
     return Plan::select('id','name','type','price','max_users','max_devices')->get();
 });
+
+
+Route::middleware('auth:sanctum')->post('/telemetry', [\App\Http\Controllers\TelemetryController::class, 'store']);
