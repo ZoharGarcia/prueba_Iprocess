@@ -5,7 +5,7 @@ namespace App\Services;
 use InfluxDB2\Client;
 use InfluxDB2\Model\WritePrecision;
 use InfluxDB2\Point;
-use InfluxDB2\WriteOptions;
+use RuntimeException;
 use Throwable;
 
 class InfluxService
@@ -19,17 +19,28 @@ class InfluxService
         $this->org = (string) config('influx.org');
         $this->bucket = (string) config('influx.bucket');
 
-        if ($this->org === '') {
-            throw new \RuntimeException('INFLUX_ORG no está configurado.');
-        }
-        if ($this->bucket === '') {
-            throw new \RuntimeException('INFLUX_BUCKET no está configurado.');
-        }
+        $url = (string) config('influx.url');
+        $token = (string) config('influx.token');
+        $timeout = (int) config('influx.timeout', 10);
+
+        if ($url === '') throw new RuntimeException('INFLUX_URL no está configurado.');
+        if ($token === '') throw new RuntimeException('INFLUX_TOKEN no está configurado.');
+        if ($this->org === '') throw new RuntimeException('INFLUX_ORG no está configurado.');
+        if ($this->bucket === '') throw new RuntimeException('INFLUX_BUCKET no está configurado.');
 
         $this->client = new Client([
-            'url' => (string) config('influx.url'),
-            'token' => (string) config('influx.token'),
-            'timeout' => (int) config('influx.timeout'),
+            'url' => $url,
+            'token' => $token,
+            'timeout' => $timeout,
+
+            // ✅ recomendado por docs: defaults en el client
+            'org' => $this->org,
+            'bucket' => $this->bucket,
+            'precision' => WritePrecision::S,
+
+            // ✅ debugging (ponlo en true mientras pruebas)
+            'debug' => true,
+            // 'logFile' => storage_path('logs/influx.log'), // opcional
         ]);
     }
 
@@ -41,60 +52,56 @@ class InfluxService
      *   time?: string|int|null
      * }> $points
      */
-public function writeMany(array $points): void
-{
-    $writeApi = $this->client->createWriteApi();
+    public function writeMany(array $points): void
+    {
+        $writeApi = $this->client->createWriteApi();
 
-    try {
-        foreach ($points as $p) {
-            $measurement = $p['measurement'] ?? 'telemetry';
-            $tags = $p['tags'] ?? [];
-            $fields = $p['fields'];
-            $time = $p['time'] ?? null;
+        try {
+            foreach ($points as $p) {
+                $measurement = $p['measurement'] ?? 'telemetry';
+                $tags = $p['tags'] ?? [];
+                $fields = $p['fields'];
+                $time = $p['time'] ?? null;
 
-            $tagStr = '';
-            foreach ($tags as $k => $v) {
-                $tagStr .= ',' . $this->escapeKey((string)$k) . '=' . $this->escapeKey((string)$v);
+                // 1) normaliza timestamp a epoch seconds (o null)
+                $epoch = null;
+                if ($time !== null) {
+                    if (is_int($time)) {
+                        $epoch = $time; // asume seconds
+                    } else {
+                        $epoch = strtotime((string) $time) ?: null; // ISO -> seconds
+                    }
+                }
+
+                // 2) arma Point
+                $point = Point::measurement($measurement);
+
+                foreach ($tags as $k => $v) {
+                    $point->addTag((string) $k, (string) $v);
+                }
+                foreach ($fields as $k => $v) {
+                    $point->addField((string) $k, $v);
+                }
+
+                // 3) si no mandas time, Influx pone “server time” (ideal para test)
+                if ($epoch !== null) {
+                    $point->time($epoch, WritePrecision::S);
+                }
+
+                // ✅ exactamente como la guía: write(point, precision, bucket, org)
+                $writeApi->write($point, WritePrecision::S, $this->bucket, $this->org);
             }
-
-            $fieldParts = [];
-            foreach ($fields as $k => $v) {
-                $fieldParts[] = $this->escapeKey((string)$k) . '=' . $this->formatFieldValue($v);
-            }
-
-            $line = $this->escapeKey($measurement) . $tagStr . ' ' . implode(',', $fieldParts);
-
-            if ($time !== null) {
-                $line .= ' ' . (string)$time; // ns
-            }
-
-            // ✅ CLAVE en 3.8.0
-            $writeApi->writeRaw($line, WritePrecision::NS, $this->bucket, $this->org);
+        } catch (Throwable $e) {
+            // Esto te evita “silencios”
+            throw $e;
+        } finally {
+            $writeApi->close();
         }
-    } finally {
-        $writeApi->close();
     }
-}
 
-private function escapeKey(string $s): string
-{
-    // Escape para measurement/tag keys/tag values/field keys
-    return str_replace(['\\', ' ', ',', '='], ['\\\\', '\ ', '\,', '\='], $s);
-}
-
-private function formatFieldValue($v): string
-{
-    if (is_bool($v)) return $v ? 'true' : 'false';
-    if (is_int($v)) return $v . 'i';
-    if (is_float($v)) return sprintf('%.15g', $v);
-
-    $sv = str_replace(['\\', '"'], ['\\\\', '\"'], (string)$v);
-    return '"' . $sv . '"';
-}
     public function query(string $flux): array
     {
-        $queryApi = $this->client->createQueryApi();
-        $tables = $queryApi->query($flux, $this->org);
+        $tables = $this->client->createQueryApi()->query($flux, $this->org);
 
         $rows = [];
         foreach ($tables as $table) {
@@ -102,7 +109,6 @@ private function formatFieldValue($v): string
                 $rows[] = $record->values;
             }
         }
-
         return $rows;
     }
 }

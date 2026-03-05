@@ -208,7 +208,7 @@ export default function Profile() {
     if (!confirm("¿Seguro que deseas eliminar tu cuenta?")) return;
 
     try {
-      const res = await fetch(`${apiBase}/api/account`, {
+      const res = await fetch(`${apiBase}/account`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

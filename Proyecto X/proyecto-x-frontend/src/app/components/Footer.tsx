@@ -1,5 +1,23 @@
-import { Link } from "react-router";
-import { Github, Twitter, Linkedin, Mail } from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  Github,
+  Linkedin,
+  Mail,
+  Facebook,
+  Instagram,
+} from "lucide-react";
+
+const WHATSAPP_URL =
+  "https://api.whatsapp.com/message/SKFMZLLTWXMKD1?autoload=1&app_absent=0";
+
+// Cambia estos por tus URLs reales
+const SOCIALS = {
+  facebook: "https://facebook.com/iProcessind/",
+  instagram: "https://instagram.com/iprocessind/",
+  linkedin: "https://www.linkedin.com/company/iprocessind/",
+  github: "https://github.com/tu-org",
+  email: "mailto:info@iprocess-ind.com",
+};
 
 export function Footer() {
   return (
@@ -14,33 +32,72 @@ export function Footer() {
               </div>
               <span className="text-xl font-bold">Proyecto X</span>
             </Link>
+
             <p className="text-[#a3a2a2] text-sm mb-4">
-              Monitoreo inteligente de sensores industriales para optimizar tus operaciones.
+              Monitoreo inteligente de sensores industriales para optimizar tus
+              operaciones.
             </p>
+
+            {/* Social icons */}
             <div className="flex space-x-4">
               <a
-                href="#"
+                href={SOCIALS.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
                 className="w-10 h-10 rounded-full bg-[#a3a2a2]/20 hover:bg-primary flex items-center justify-center transition-colors"
               >
-                <Twitter className="h-5 w-5" />
+                <Facebook className="h-5 w-5" />
               </a>
+
               <a
-                href="#"
+                href={SOCIALS.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="w-10 h-10 rounded-full bg-[#a3a2a2]/20 hover:bg-primary flex items-center justify-center transition-colors"
+              >
+                <Instagram className="h-5 w-5" />
+              </a>
+
+              <a
+                href={SOCIALS.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
                 className="w-10 h-10 rounded-full bg-[#a3a2a2]/20 hover:bg-primary flex items-center justify-center transition-colors"
               >
                 <Linkedin className="h-5 w-5" />
               </a>
+
               <a
-                href="#"
+                href={SOCIALS.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GitHub"
                 className="w-10 h-10 rounded-full bg-[#a3a2a2]/20 hover:bg-primary flex items-center justify-center transition-colors"
               >
                 <Github className="h-5 w-5" />
               </a>
+
               <a
-                href="#"
+                href={SOCIALS.email}
+                aria-label="Email"
                 className="w-10 h-10 rounded-full bg-[#a3a2a2]/20 hover:bg-primary flex items-center justify-center transition-colors"
               >
                 <Mail className="h-5 w-5" />
+              </a>
+            </div>
+
+            {/* Quick contact */}
+            <div className="mt-4">
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-[#a3a2a2] hover:text-primary transition-colors"
+              >
+                Contactar por WhatsApp
               </a>
             </div>
           </div>
@@ -50,29 +107,44 @@ export function Footer() {
             <h4 className="font-bold mb-4">Producto</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/features" className="text-[#a3a2a2] hover:text-primary transition-colors">
+                <Link
+                  to="/features"
+                  className="text-[#a3a2a2] hover:text-primary transition-colors"
+                >
                   Características
                 </Link>
               </li>
               <li>
-                <Link to="/pricing" className="text-[#a3a2a2] hover:text-primary transition-colors">
+                <Link
+                  to="/pricing"
+                  className="text-[#a3a2a2] hover:text-primary transition-colors"
+                >
                   Precios
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-[#a3a2a2] hover:text-primary transition-colors">
+                <Link
+                  to="/docs"
+                  className="text-[#a3a2a2] hover:text-primary transition-colors"
+                >
                   Documentación
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-[#a3a2a2] hover:text-primary transition-colors">
+                <Link
+                  to="/api"
+                  className="text-[#a3a2a2] hover:text-primary transition-colors"
+                >
                   API Reference
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-[#a3a2a2] hover:text-primary transition-colors">
+                <Link
+                  to="/changelog"
+                  className="text-[#a3a2a2] hover:text-primary transition-colors"
+                >
                   Actualizaciones
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -82,29 +154,37 @@ export function Footer() {
             <h4 className="font-bold mb-4">Empresa</h4>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-[#a3a2a2] hover:text-primary transition-colors">
+                <Link
+                  to="/about"
+                  className="text-[#a3a2a2] hover:text-primary transition-colors"
+                >
                   Acerca de
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-[#a3a2a2] hover:text-primary transition-colors">
+                <Link
+                  to="/blog"
+                  className="text-[#a3a2a2] hover:text-primary transition-colors"
+                >
                   Blog
-                </a>
+                </Link>
               </li>
+
               <li>
-                <a href="#" className="text-[#a3a2a2] hover:text-primary transition-colors">
-                  Carreras
-                </a>
-              </li>
-              <li>
-                <Link to="/contact" className="text-[#a3a2a2] hover:text-primary transition-colors">
+                <Link
+                  to="/contact"
+                  className="text-[#a3a2a2] hover:text-primary transition-colors"
+                >
                   Contacto
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-[#a3a2a2] hover:text-primary transition-colors">
+                <Link
+                  to="/partners"
+                  className="text-[#a3a2a2] hover:text-primary transition-colors"
+                >
                   Partners
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -114,29 +194,46 @@ export function Footer() {
             <h4 className="font-bold mb-4">Recursos</h4>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-[#a3a2a2] hover:text-primary transition-colors">
+                <Link
+                  to="/help"
+                  className="text-[#a3a2a2] hover:text-primary transition-colors"
+                >
                   Centro de Ayuda
+                </Link>
+              </li>
+              <li>
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#a3a2a2] hover:text-primary transition-colors"
+                >
+                  Soporte (WhatsApp)
                 </a>
               </li>
               <li>
-                <a href="#" className="text-[#a3a2a2] hover:text-primary transition-colors">
-                  Soporte
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-[#a3a2a2] hover:text-primary transition-colors">
+                <Link
+                  to="/community"
+                  className="text-[#a3a2a2] hover:text-primary transition-colors"
+                >
                   Comunidad
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-[#a3a2a2] hover:text-primary transition-colors">
+                <Link
+                  to="/status"
+                  className="text-[#a3a2a2] hover:text-primary transition-colors"
+                >
                   Estado del Sistema
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-[#a3a2a2] hover:text-primary transition-colors">
+                <Link
+                  to="/security"
+                  className="text-[#a3a2a2] hover:text-primary transition-colors"
+                >
                   Seguridad
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -148,15 +245,24 @@ export function Footer() {
             © 2026 Proyecto X. Todos los derechos reservados.
           </p>
           <div className="flex space-x-6">
-            <a href="#" className="text-[#a3a2a2] hover:text-primary text-sm transition-colors">
+            <Link
+              to="/privacy"
+              className="text-[#a3a2a2] hover:text-primary text-sm transition-colors"
+            >
               Privacidad
-            </a>
-            <a href="#" className="text-[#a3a2a2] hover:text-primary text-sm transition-colors">
+            </Link>
+            <Link
+              to="/terms"
+              className="text-[#a3a2a2] hover:text-primary text-sm transition-colors"
+            >
               Términos
-            </a>
-            <a href="#" className="text-[#a3a2a2] hover:text-primary text-sm transition-colors">
+            </Link>
+            <Link
+              to="/cookies"
+              className="text-[#a3a2a2] hover:text-primary text-sm transition-colors"
+            >
               Cookies
-            </a>
+            </Link>
           </div>
         </div>
       </div>

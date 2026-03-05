@@ -54,7 +54,7 @@ class TelemetryController extends Controller
                 'measurement' => 'telemetry',
                 'tags' => $tags,
                 'fields' => $fields,
-                'time' => $s['ts'] ?? null,
+                'time' => !empty($s['ts']) ? strtotime($s['ts']) : null, 
             ];
         }
 

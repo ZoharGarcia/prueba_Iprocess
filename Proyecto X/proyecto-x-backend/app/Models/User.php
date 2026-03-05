@@ -61,6 +61,10 @@ class User extends Authenticatable
     {
         return $this->role === 'user';
     }
+public function plan(): ?Plan
+{
+    return $this->company?->subscriptionPlan;
+}
 
     public function isSuperAdmin(): bool
     {

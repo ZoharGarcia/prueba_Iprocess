@@ -20,6 +20,7 @@ use App\Http\Controllers\Company\CompanyUserController;
 use App\Http\Controllers\Company\DeviceController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Models\Plan;
+use App\Http\Controllers\SystemStatusController;
 
 /*
 |--------------------------------------------------------------------------
@@ -432,3 +433,5 @@ Route::get('/plans', function () {
 
 
 Route::middleware('auth:sanctum')->post('/telemetry', [\App\Http\Controllers\TelemetryController::class, 'store']);
+
+Route::get('/system-status', [SystemStatusController::class, 'show']);

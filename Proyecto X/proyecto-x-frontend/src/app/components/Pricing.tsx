@@ -1,60 +1,38 @@
+import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
 import { Button } from "./ui/button";
 
 const plans = [
   {
-    name: "Básico",
-    price: "$29",
+    name: "Individual Básico",
+    price: "$-",
     period: "/mes",
-    description: "Perfecto para pequeñas operaciones y pruebas iniciales",
+    description: "Ideal para uso personal o pruebas en un solo usuario.",
     features: [
-      "Hasta 10 sensores",
+      "1 usuario",
+      "Hasta 3 dispositivos",
       "Monitoreo en tiempo real",
-      "Alertas por email",
       "Dashboard básico",
-      "Retención de datos 7 días",
       "Soporte por email",
     ],
     highlighted: false,
+    cta: "Probar Gratis",
   },
   {
-    name: "Pro",
-    price: "$99",
+    name: "Empresa Pro",
+    price: "$-",
     period: "/mes",
-    description: "Ideal para operaciones medianas que requieren más control",
+    description: "Para equipos y operaciones pequeñas/medianas con más capacidad.",
     features: [
-      "Hasta 100 sensores",
+      "Hasta 10 usuarios",
+      "Hasta 50 dispositivos",
       "Monitoreo en tiempo real",
-      "Alertas multi-canal (Email, SMS, Slack)",
-      "Dashboard personalizable",
-      "Retención de datos 90 días",
-      "Analytics avanzado",
-      "API completa",
-      "Soporte prioritario 24/7",
-      "Reportes automatizados",
+      "Alertas por email",
+      "Dashboard avanzado",
+      "Soporte prioritario",
     ],
     highlighted: true,
-  },
-  {
-    name: "Premium",
-    price: "$299",
-    period: "/mes",
-    description: "Solución empresarial para operaciones a gran escala",
-    features: [
-      "Sensores ilimitados",
-      "Monitoreo en tiempo real",
-      "Alertas multi-canal ilimitadas",
-      "Dashboards ilimitados",
-      "Retención de datos ilimitada",
-      "Analytics avanzado + ML",
-      "API completa + Webhooks",
-      "Soporte dedicado 24/7",
-      "Reportes personalizados",
-      "SLA garantizado 99.99%",
-      "Onboarding personalizado",
-      "Auditoría y cumplimiento",
-    ],
-    highlighted: false,
+    cta: "Comenzar Ahora",
   },
 ];
 
@@ -68,16 +46,16 @@ export function Pricing() {
             <span className="text-sm text-primary">Precios</span>
           </div>
           <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">
-            Planes que escalan con tu{" "}
-            <span className="text-primary">negocio</span>
+            Planes que escalan con tu <span className="text-primary">negocio</span>
           </h2>
           <p className="text-xl text-secondary">
-            Elige el plan perfecto para tus necesidades. Todos incluyen prueba gratuita de 14 días.
+            Elige el plan perfecto para tus necesidades. Todos incluyen prueba gratuita
+            de 14 días.
           </p>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {plans.map((plan, index) => (
             <div
               key={index}
@@ -89,29 +67,38 @@ export function Pricing() {
             >
               {plan.highlighted && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary text-white text-sm rounded-full">
-                  Más Popular
+                  Recomendado
                 </div>
               )}
 
               <div className="mb-6">
-                <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
+                <h3 className="text-2xl font-bold text-foreground mb-2">
+                  {plan.name}
+                </h3>
                 <p className="text-secondary text-sm mb-4">{plan.description}</p>
                 <div className="flex items-baseline">
-                  <span className="text-5xl font-bold text-foreground">{plan.price}</span>
+                  <span className="text-5xl font-bold text-foreground">
+                    {plan.price}
+                  </span>
                   <span className="text-secondary ml-2">{plan.period}</span>
                 </div>
               </div>
 
+              {/* CTA -> /mi-plan (para ambos) */}
               <Button
+                asChild
                 className="w-full mb-6"
                 variant={plan.highlighted ? "default" : "outline"}
                 size="lg"
               >
-                {plan.highlighted ? "Comenzar Ahora" : "Probar Gratis"}
+                <Link to="/mi-plan">{plan.cta}</Link>
               </Button>
 
               <div className="space-y-4">
-                <div className="text-sm font-bold text-foreground mb-3">Incluye:</div>
+                <div className="text-sm font-bold text-foreground mb-3">
+                  Incluye:
+                </div>
+
                 {plan.features.map((feature, featureIndex) => (
                   <div key={featureIndex} className="flex items-start space-x-3">
                     <div
@@ -133,13 +120,22 @@ export function Pricing() {
         <div className="mt-16 text-center">
           <div className="bg-white border border-border rounded-2xl p-8 max-w-4xl mx-auto">
             <h3 className="text-2xl font-bold text-foreground mb-4">
-              ¿Necesitas una solución empresarial personalizada?
+              ¿Necesitas un plan a medida?
             </h3>
             <p className="text-secondary mb-6">
-              Contáctanos para planes personalizados con precios especiales por volumen, implementación dedicada y características exclusivas.
+              Podemos ofrecer precios por volumen, límites personalizados de usuarios/dispositivos
+              y soporte dedicado.
             </p>
-            <Button size="lg" variant="outline">
-              Contactar Ventas
+
+            {/* WhatsApp */}
+            <Button asChild size="lg" variant="outline">
+              <a
+                href="https://api.whatsapp.com/message/SKFMZLLTWXMKD1?autoload=1&app_absent=0"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Contactar Ventas
+              </a>
             </Button>
           </div>
         </div>

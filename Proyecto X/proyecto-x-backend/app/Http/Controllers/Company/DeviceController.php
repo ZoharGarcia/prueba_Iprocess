@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Company;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Device;
+use App\Models\DeviceApiKey;
+use App\Services\PlanGate;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class DeviceController extends Controller
@@ -14,43 +16,58 @@ class DeviceController extends Controller
      */
     public function index(Request $request)
     {
-        $company = $request->user()->company;
+        $user = $request->user();
 
-        return response()->json([
-            'devices' => $company->devices
-        ]);
+        $devices = Device::where('company_id', $user->company_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json(['devices' => $devices]);
     }
 
     /**
-     * Crear nuevo dispositivo
+     * Crear nuevo dispositivo (IO-Link Master) con límite por plan + token de ingestión
      */
-    public function store(Request $request)
+    public function store(Request $request, PlanGate $gate)
     {
-        $request->validate([
-            'name' => 'required|string|max:255'
+        $user = $request->user();
+
+        // ✅ Chequeo por plan (por empresa / plan_id en companies)
+        $gate->assertCanAddIOLinkMaster($user);
+
+        $data = $request->validate([
+            'name'   => 'required|string|max:120',
+            'area'   => 'nullable|string|max:80',
+            'vendor' => 'nullable|string|max:80',
+            'model'  => 'nullable|string|max:80',
+            'serial' => 'nullable|string|max:80',
         ]);
 
-        $user = $request->user();
-        $company = $user->company;
-        $plan = $company->plan;
-
-        // 🔒 Verificar límite de dispositivos según plan
-        if ($company->devices()->count() >= $plan->max_devices) {
-            return response()->json([
-                'message' => 'Has alcanzado el límite de dispositivos de tu plan.'
-            ], 403);
-        }
-
         $device = Device::create([
-            'company_id' => $company->id,
-            'name'       => $request->name,
-            'token'      => Str::uuid(), // Token único para el dispositivo
-            'status'     => 'active'
+            'company_id' => $user->company_id,
+            'type'       => 'iolink_master',
+            'name'       => $data['name'],
+            'area'       => $data['area'] ?? null,
+            'vendor'     => $data['vendor'] ?? null,
+            'model'      => $data['model'] ?? null,
+            'serial'     => $data['serial'] ?? null,
+            'status'     => 'offline',
+        ]);
+
+        // ✅ Token para ingestion (se muestra 1 sola vez)
+        $plain  = Str::random(48);
+        $prefix = substr($plain, 0, 12);
+
+        DeviceApiKey::create([
+            'device_id' => $device->id,
+            'prefix'    => $prefix,
+            'hash'      => hash('sha256', $plain),
         ]);
 
         return response()->json([
-            'message' => 'Dispositivo creado correctamente',
-            'device'  => $device
+            'message'     => 'Dispositivo creado correctamente',
+            'device'      => $device,
+            'ingest_token' => $prefix . '.' . $plain,
         ], 201);
     }
 }
